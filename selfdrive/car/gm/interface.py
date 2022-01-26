@@ -170,9 +170,9 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 1.0
       # still working on improving lateral
       ret.steerRateCost = 0.5
-      ret.steerActuatorDelay = 0.
+      ret.steerActuatorDelay = 0.15
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[10., 41.0], [10., 41.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.26], [0.01, 0.021]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.11, 0.16], [0.01, 0.021]]
       #ret.lateralTuning.pid.kdBP = [0.] removed from cereal
       #ret.lateralTuning.pid.kdV = [0.316]  # very sensitive to changes greater than 0.001
       ret.lateralTuning.pid.kf = 0.0001
