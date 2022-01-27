@@ -274,15 +274,14 @@ class CarInterface(CarInterfaceBase):
         be.pressed = False
         but = self.CS.prev_cruise_buttons
       if but == CruiseButtons.RES_ACCEL:
-        if not (ret.cruiseState.enabled and ret.standstill):
-          be.type = ButtonType.accelCruise  # Suppress resume button if we're resuming from stop so we don't adjust speed.
+        be.type = ButtonType.accelCruise
       elif but == CruiseButtons.DECEL_SET:
         be.type = ButtonType.decelCruise
       elif but == CruiseButtons.CANCEL:
-        if not self.CP.enableGasInterceptor: #need to use cancel to disable cc with Pedal TODO: auto-disengage CC
-          be.type = ButtonType.cancel
+        be.type = ButtonType.cancel
       elif but == CruiseButtons.MAIN:
-        be.type = ButtonType.altButton3
+        if not self.CP.enableGasInterceptor:
+          be.type = ButtonType.altButton3
       buttonEvents.append(be)
 
     ret.buttonEvents = buttonEvents
