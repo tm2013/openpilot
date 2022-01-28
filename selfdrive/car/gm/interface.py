@@ -170,7 +170,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 1.0
       # still working on improving lateral
       ret.steerRateCost = 0.5
-      ret.steerActuatorDelay = 0.15
+      ret.steerActuatorDelay = 0.
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[10., 41.0], [10., 41.0]]
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.26], [0.01, 0.02]]
       ret.lateralTuning.pid.kf = 0.0001
@@ -236,16 +236,21 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kiBP = [0.]
     ret.longitudinalTuning.kiV = [0.36]
 
-    #  TODO: Pedal long needs a tune, but this one will probably cause a crash...
+      # TODO: Pedal long needs a tune, but this one will probably cause a crash...
     if ret.enableGasInterceptor and candidate == CAR.BOLT_NR:
       # Assumes the Bolt is using L-Mode for regen braking.
       ret.longitudinalTuning.kpBP = [0.0, 5.0, 10.0, 20.0, 35.0]
-      ret.longitudinalTuning.kpV = [0.3, 0.7, 0.9, 1., 0.9]
-      ret.longitudinalTuning.kiBP = [0., 35.]
+      ret.longitudinalTuning.kpV = [0.2, 0.28, 0.47, 0.68, 0.47]
+      ret.longitudinalTuning.kiBP = [0., 35.] 
       ret.longitudinalTuning.kiV = [0.31, 0.26]
-      ret.stoppingDecelRate = 0.2
-      ret.stopAccel = -0.1
+      ret.stoppingDecelRate = 0.2  # reach stopping target smoothly, brake_travel/s while trying to stop
+      ret.stopAccel = -0. # Required acceleraton to keep vehicle stationary
+      ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
+      ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
+      # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
       ret.stoppingControl = True
+      ret.longitudinalTuning.deadzoneBP = [0.]
+      ret.longitudinalTuning.deadzoneV = [0.]
 
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
@@ -274,14 +279,15 @@ class CarInterface(CarInterfaceBase):
         be.pressed = False
         but = self.CS.prev_cruise_buttons
       if but == CruiseButtons.RES_ACCEL:
-        be.type = ButtonType.accelCruise
+        if not (ret.cruiseState.enabled and ret.standstill):
+          be.type = ButtonType.accelCruise  # Suppress resume button if we're resuming from stop so we don't adjust speed.
       elif but == CruiseButtons.DECEL_SET:
         be.type = ButtonType.decelCruise
       elif but == CruiseButtons.CANCEL:
-        be.type = ButtonType.cancel
+        if not self.CP.enableGasInterceptor: #need to use cancel to disable cc with Pedal TODO: auto-disengage CC
+          be.type = ButtonType.cancel
       elif but == CruiseButtons.MAIN:
-        if not self.CP.enableGasInterceptor:
-          be.type = ButtonType.altButton3
+        be.type = ButtonType.altButton3
       buttonEvents.append(be)
 
     ret.buttonEvents = buttonEvents
