@@ -239,8 +239,10 @@ class CarInterface(CarInterfaceBase):
       # TODO: Pedal long needs a tune, but this one will probably cause a crash...
     if ret.enableGasInterceptor and candidate == CAR.BOLT_NR:
       # Assumes the Bolt is using L-Mode for regen braking.
-      ret.longitudinalTuning.kpBP = [0.0, 5.0, 10.0, 20.0, 35.0]
-      ret.longitudinalTuning.kpV = [0.2, 0.28, 0.47, 0.68, 0.47]
+      #ret.longitudinalTuning.kpBP = [0.0, 5.0, 10.0, 20.0, 35.0]
+      #ret.longitudinalTuning.kpV = [0.2, 0.28, 0.47, 0.68, 0.47]
+      ret.longitudinalTuning.kpBP = [0., 35]
+      ret.longitudinalTuning.kpV = [0.2, 0.5]
       ret.longitudinalTuning.kiBP = [0., 35.] 
       ret.longitudinalTuning.kiV = [0.31, 0.26]
       ret.stoppingDecelRate = 0.2  # reach stopping target smoothly, brake_travel/s while trying to stop
