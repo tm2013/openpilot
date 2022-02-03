@@ -239,7 +239,7 @@ class CarInterface(CarInterfaceBase):
     if ret.enableGasInterceptor and candidate == CAR.BOLT_NR:
       # Assumes the Bolt is using L-Mode for regen braking.
       ret.longitudinalTuning.kpBP = [0., 35]
-      ret.longitudinalTuning.kpV = [0.2, 0.5] 
+      ret.longitudinalTuning.kpV = [0.25, 0.5] 
       ret.longitudinalTuning.kiBP = [0., 35.] 
       ret.longitudinalTuning.kiV = [0.3, 0.35]
       ret.stoppingDecelRate = 0.2  # reach stopping target smoothly, brake_travel/s while trying to stop
