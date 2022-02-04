@@ -176,7 +176,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kf = 0.0001
       #steering parameters from Geniuth
       ret.steerMaxBP = [10., 25.]
-      ret.steerMaxV = [1., 1.2]
+      ret.steerMaxV = [1., 1.15]
       
     elif candidate == CAR.EQUINOX_NR:
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
@@ -241,7 +241,7 @@ class CarInterface(CarInterfaceBase):
       ret.longitudinalTuning.kpBP = [0., 35]
       ret.longitudinalTuning.kpV = [0.25, 0.45] 
       ret.longitudinalTuning.kiBP = [0., 35.] 
-      ret.longitudinalTuning.kiV = [0.25, 0.35]
+      ret.longitudinalTuning.kiV = [0.22, 0.29]
       ret.stoppingDecelRate = 0.2  # reach stopping target smoothly, brake_travel/s while trying to stop
       ret.stopAccel = 0. # Required acceleraton to keep vehicle stationary
       ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
