@@ -161,7 +161,7 @@ class CarInterface(CarInterfaceBase):
 
     elif candidate == CAR.BOLT_NR:
       ret.minEnableSpeed = -1
-      ret.minSteerSpeed = 5 * CV.MPH_TO_MS
+      ret.minSteerSpeed = 6 * CV.MPH_TO_MS
       ret.mass = 1616. + STD_CARGO_KG
       ret.wheelbase = 2.60096
       ret.steerRatio = 16.8
@@ -172,7 +172,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRateCost = 0.5
       ret.steerActuatorDelay = 0.
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[10., 41.0], [10., 41.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.268], [0.01, 0.021]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.267], [0.01, 0.021]]
       ret.lateralTuning.pid.kf = 0.0001
       
     elif candidate == CAR.EQUINOX_NR:
@@ -236,11 +236,11 @@ class CarInterface(CarInterfaceBase):
     if ret.enableGasInterceptor and candidate == CAR.BOLT_NR:
       # Assumes the Bolt is using L-Mode for regen braking.
       ret.longitudinalTuning.kpBP = [0., 35]
-      ret.longitudinalTuning.kpV = [0.24, 0.49] 
+      ret.longitudinalTuning.kpV = [0.25, 0.49] 
       ret.longitudinalTuning.kiBP = [0., 35.] 
-      ret.longitudinalTuning.kiV = [0.24, 0.35]
-      ret.stoppingDecelRate = 0.2  # reach stopping target smoothly, brake_travel/s while trying to stop
-      ret.stopAccel = -0.13 # Required acceleraton to keep vehicle stationary
+      ret.longitudinalTuning.kiV = [0.22, 0.34]
+      ret.stoppingDecelRate = 0.18  # reach stopping target smoothly, brake_travel/s while trying to stop
+      ret.stopAccel = -0.1 # Required acceleraton to keep vehicle stationary
       ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
       ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
       # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
