@@ -238,13 +238,13 @@ class CarInterface(CarInterfaceBase):
     if ret.enableGasInterceptor and candidate == CAR.BOLT_NR:
       # Assumes the Bolt is using L-Mode for regen braking.
       ret.longitudinalTuning.kpBP = [0., 35]
-      ret.longitudinalTuning.kpV = [0.25, 0.49] 
+      ret.longitudinalTuning.kpV = [0.26, 0.46] 
       ret.longitudinalTuning.kiBP = [0., 35.] 
-      ret.longitudinalTuning.kiV = [0.22, 0.34]
+      ret.longitudinalTuning.kiV = [0.22, 0.33]
       ret.stoppingDecelRate = 0.18  # reach stopping target smoothly, brake_travel/s while trying to stop
-      ret.stopAccel = 0.1 # Required acceleraton to keep vehicle stationary
-      ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
-      ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
+      ret.stopAccel = -2.0 # Required acceleraton to keep vehicle stationary
+      ret.vEgoStopping = 0.6  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
+      ret.vEgoStarting = 0.6  # Speed at which the car goes into starting state, when car starts requesting starting accel,
       # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
       ret.stoppingControl = True
       ret.longitudinalTuning.deadzoneBP = [0.]
