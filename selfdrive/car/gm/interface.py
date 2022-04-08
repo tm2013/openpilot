@@ -175,7 +175,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.275], [0.01, 0.021]]
       ret.lateralTuning.pid.kf = 0.0002
       ret.steerMaxBP = [0.]
-      ret.steerMaxV = [1.3]
+      ret.steerMaxV = [1.]
       
     elif candidate == CAR.EQUINOX_NR:
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
