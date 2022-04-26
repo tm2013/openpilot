@@ -172,10 +172,10 @@ class CarInterface(CarInterfaceBase):
       ret.steerRateCost = 0.5
       ret.steerActuatorDelay = 0.
       ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[10., 41.0], [10., 41.0]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.27], [0.01, 0.02]]
-      ret.lateralTuning.pid.kf = 0.0003
-      ret.steerMaxBP = [0., 41.0]
-      ret.steerMaxV = [1., 1.2]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.275], [0.01, 0.021]]
+      ret.lateralTuning.pid.kf = 0.0002
+      ret.steerMaxBP = [0.]
+      ret.steerMaxV = [1.]
       
     elif candidate == CAR.EQUINOX_NR:
       ret.minEnableSpeed = 18 * CV.MPH_TO_MS
