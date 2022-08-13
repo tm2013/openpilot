@@ -5,7 +5,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
+from selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR, CAR
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 NetworkLocation = car.CarParams.NetworkLocation
@@ -112,7 +112,11 @@ class CarController:
       if (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
-          can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CruiseButtons.CANCEL))
+          if self.CP.carFingerprint == CAR.BOLT_EV:
+            #TODO: Testing button spamming on CC-only Bolts (cross fingers)
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.CANCEL))
+          else:
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CruiseButtons.CANCEL))
 
     # Show green icon when LKA torque is applied, and
     # alarming orange icon when approaching torque limit.
