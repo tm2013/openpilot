@@ -50,9 +50,7 @@ class CarInterface(CarInterfaceBase):
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     
-    # Note: Remove prior to lifting draft status on PR
-    ret.enableGasInterceptor = 0x201 in fingerprint[0]
-
+    
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
     else:
@@ -64,6 +62,12 @@ class CarInterface(CarInterfaceBase):
       ret.radarOffCan = True  # no radar
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
+      
+      # Note: Remove prior to lifting draft status on PR
+      ret.enableGasInterceptor = 0x201 in fingerprint[0]
+      if ret.enableGasInterceptor:
+        ret.openpilotLongitudinalControl = True
+      
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
       ret.networkLocation = NetworkLocation.gateway
@@ -172,6 +176,10 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 1.0
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+      # No ACC settings
+      ret.pcmCruise = False
+      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
+      
 
       if ret.enableGasInterceptor:
         #Note: Low speed, stop and go not tested. Should be fairly smooth on highway

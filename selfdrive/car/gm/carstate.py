@@ -75,11 +75,18 @@ class CarState(CarStateBase):
     ret.parkingBrake = pt_cp.vl["VehicleIgnitionAlt"]["ParkBrake"] == 1
     ret.cruiseState.available = pt_cp.vl["ECMEngineStatus"]["CruiseMainOn"] != 0
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
-    if self.CP.carFingerprint != CAR.BOLT_EV:
-      ret.accFaulted = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED
-
-    ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
-    ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
+    
+    if self.CP.carFingerprint == CAR.BOLT_EV:
+      # TODO: Seek out CC state (may need to force fault...)
+      ret.accFaulted = False
+      ret.cruiseState.enabled = pt_cp.vl["ECMEngineStatus"]["CruiseActive"] == 1
+      ret.cruiseState.standstill = False # Not possible with CC...
+    else:
+      ret.accFaulted = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED # Always 3 with CC
+      ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
+      ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
+      
+    
     if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint != CAR.BOLT_EV:
       # TODO: Get regular CC setpoint...
       ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
@@ -125,6 +132,7 @@ class CarState(CarStateBase):
       ("TractionControlOn", "ESPStatus"),
       ("ParkBrake", "VehicleIgnitionAlt"),
       ("CruiseMainOn", "ECMEngineStatus"),
+      ("CruiseActive", "ECMEngineStatus"),
     ]
 
     checks = [
