@@ -49,6 +49,9 @@ class CarInterface(CarInterfaceBase):
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
+    
+    # Note: Remove prior to lifting draft status on PR
+    ret.enableGasInterceptor = 0x201 in fingerprint[0]
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
@@ -160,14 +163,29 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    elif candidate == CAR.SILVERADO:
+    elif candidate == CAR.BOLT_EV:
       ret.minEnableSpeed = -1
-      ret.mass = 2200. + STD_CARGO_KG
-      ret.wheelbase = 3.75
-      ret.steerRatio = 16.3
-      ret.centerToFront = ret.wheelbase * 0.5
+      ret.mass = 1669. + STD_CARGO_KG
+      ret.wheelbase = 2.601
+      ret.steerRatio = 16.8
+      ret.centerToFront = 2.0828 # Measured
       tire_stiffness_factor = 1.0
+      ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
+      if ret.enableGasInterceptor:
+        #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
+        ret.longitudinalTuning.kpBP = [0., 35.0]
+        ret.longitudinalTuning.kpV = [0.4, 0.06] 
+        ret.longitudinalTuning.kiBP = [0., 35.0] 
+        ret.longitudinalTuning.kiV = [0.0, 0.04]
+        ret.longitudinalTuning.kf = 0.25
+        ret.stoppingDecelRate = 0.8  # reach stopping target smoothly, brake_travel/s while trying to stop
+        ret.stopAccel = 0. # Required acceleraton to keep vehicle stationary
+        ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
+        ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
+        # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
+        ret.stoppingControl = True
 
     # TODO: get actual value, for now starting with reasonable value for
     # civic and scaling by mass and wheelbase
