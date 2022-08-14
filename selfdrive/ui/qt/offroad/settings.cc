@@ -54,6 +54,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_monitoring.png",
     },
     {
+      "RecordHQ",
+      tr("Save HQ road video files"),
+      tr("Disable to prevent the saving of high quality road camera streams."),
+      "../assets/offroad/icon_monitoring.png",
+    },
+    {
       "DisengageOnAccelerator",
       tr("Disengage On Accelerator Pedal"),
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
