@@ -4,7 +4,7 @@ from common.numpy_fast import mean
 from opendbc.can.can_define import CANDefine
 from opendbc.can.parser import CANParser
 from selfdrive.car.interfaces import CarStateBase
-from selfdrive.car.gm.values import DBC, AccState, CanBus, STEER_THRESHOLD, CAR
+from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, AccState, CanBus, STEER_THRESHOLD
 
 TransmissionType = car.CarParams.TransmissionType
 NetworkLocation = car.CarParams.NetworkLocation
@@ -76,7 +76,7 @@ class CarState(CarStateBase):
     ret.cruiseState.available = pt_cp.vl["ECMEngineStatus"]["CruiseMainOn"] != 0
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
     
-    if self.CP.carFingerprint == CAR.BOLT_EV:
+    if self.CP.carFingerprint in CC_ONLY_CAR:
       # TODO: Seek out CC state (may need to force fault...)
       ret.accFaulted = False
       ret.cruiseState.enabled = pt_cp.vl["ECMEngineStatus"]["CruiseActive"] == 1
@@ -87,7 +87,7 @@ class CarState(CarStateBase):
       ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
       
     
-    if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint != CAR.BOLT_EV:
+    if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR:
       # TODO: Get regular CC setpoint...
       ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
 
@@ -97,7 +97,7 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     signals = []
     checks = []
-    if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint != CAR.BOLT_EV:
+    if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
 

@@ -60,12 +60,17 @@ class CAR:
   ESCALADE_ESV = "CADILLAC ESCALADE ESV 2016"
   BOLT_EUV = "CHEVROLET BOLT EUV 2022"
   BOLT_EV = "CHEVROLET BOLT EV 2022"
+  BOLT_EV_CC = "CHEVROLET BOLT EV 2016"
 
 
 class Footnote(Enum):
   OBD_II = CarFootnote(
     'Requires a <a href="https://github.com/commaai/openpilot/wiki/GM#hardware">community built ASCM harness</a>. ' +
     '<b><i>NOTE: disconnecting the ASCM disables Automatic Emergency Braking (AEB).</i></b>',
+    Column.MODEL)
+  CC = CarFootnote(
+    'ACC Not Available: Requires a Comma Pedal ' +
+    '<b><i>NOTE: can be operated in Lateral-only without a Pedal.</i></b>',
     Column.MODEL)
 
 
@@ -87,6 +92,8 @@ CAR_INFO: Dict[str, Union[GMCarInfo, List[GMCarInfo]]] = {
   CAR.BOLT_EUV: GMCarInfo("Chevrolet Bolt EUV 2022-23", "Premier/Premier Redline Trim", video_link="https://youtu.be/xvwzGMUA210", footnotes=[], harness=Harness.gm),
   # TEMP NOTE: ACC only avail from 2022 in the LT2 trim
   CAR.BOLT_EV: GMCarInfo("Chevrolet Bolt EV 2022-23", "LT2", footnotes=[], harness=Harness.gm),
+  # TEMP NOTE: LKAS option only avail in Premier Trim
+  CAR.BOLT_EV_CC: GMCarInfo("Chevrolet Bolt EV 2016-21", "Premier/LKAS", footnotes=[Footnote.CC], harness=Harness.gm),
 }
 
 
@@ -161,6 +168,11 @@ FINGERPRINTS = {
     189: 7, 190: 7, 193: 8, 197: 8, 201: 8, 209: 7, 211: 3, 241: 6, 257: 8, 288: 5, 289: 8, 298: 8, 304: 3, 309: 8, 311: 8, 313: 8, 320: 4, 322: 7, 328: 1, 352: 5, 381: 8, 384: 4, 386: 8, 388: 8, 451: 8, 452: 8, 453: 6, 458: 5, 463: 3, 479: 3, 481: 7, 485: 8, 489: 8, 497: 8, 500: 6, 501: 8, 528: 5, 532: 6, 560: 8, 562: 8, 563: 5, 565: 5, 566: 8, 608: 8, 609: 6, 610: 6, 611: 6, 612: 8, 613: 8, 707: 8, 715: 8, 717: 5, 753: 5, 761: 7, 789: 5, 800: 6, 810: 8, 840: 5, 842: 5, 844: 8, 848: 4, 869: 4, 880: 6, 977: 8, 1001: 8, 1017: 8, 1020: 8, 1217: 8, 1221: 5, 1233: 8, 1249: 8, 1265: 8, 1280: 4, 1296: 4, 1300: 8, 1930: 7
   }],
   CAR.BOLT_EV: [
+  # Placeholder for Bolt EV w ACC
+  {
+    999: 16
+  }],
+  CAR.BOLT_EV_CC: [
   # Bolt Premier w/o ACC 2017
   {
     170: 8, 188: 8, 189: 7, 190: 6, 192: 5, 193: 8, 197: 8, 201: 6, 209: 7, 211: 2, 241: 6, 289: 1, 290: 1, 298: 8, 304: 8, 309: 8, 311: 8, 313: 8, 320: 8, 322: 7, 328: 1, 352: 5, 353: 3, 368: 8, 381: 6, 384: 8, 386: 8, 388: 8, 390: 7, 407: 7, 417: 7, 419: 1, 451: 8, 452: 8, 453: 6, 454: 8, 456: 8, 458: 8, 463: 3, 479: 3, 481: 7, 485: 8, 489: 5, 493: 8, 495: 4, 497: 8, 499: 3, 500: 6, 501: 8, 503: 1, 508: 8, 512: 3, 514: 2, 516: 4, 519: 2, 521: 3, 528: 5, 530: 8, 532: 7, 537: 5, 539: 8, 542: 7, 546: 7, 550: 8, 554: 3, 558: 8, 560: 6, 562: 4, 563: 5, 564: 5, 565: 8, 566: 6, 567: 5, 568: 1, 569: 3, 573: 1, 577: 8, 608: 8, 609: 6, 610: 6, 611: 6, 612: 8, 613: 8, 647: 3, 707: 8, 711: 6, 717: 5, 753: 5, 761: 7, 800: 6, 810: 8, 832: 8, 840: 6, 842: 6, 844: 8, 866: 4, 869: 4, 872: 1, 961: 8, 967: 4, 969: 8, 977: 8, 979: 7, 985: 5, 988: 6, 989: 8, 995: 7, 1001: 5, 1003: 5, 1005: 6, 1009: 8, 1013: 3, 1017: 8, 1019: 2, 1020: 8, 1022: 1, 1105: 6, 1187: 4, 1217: 8, 1221: 5, 1223: 3, 1225: 7, 1227: 4, 1233: 8, 1243: 3, 1249: 8, 1257: 6, 1265: 8, 1275: 3, 1280: 4, 1300: 8, 1322: 6, 1328: 4, 1601: 8, 1904: 7, 1905: 7, 1906: 7, 1907: 7, 1912: 7, 1913: 7, 1927: 7, 2016: 8, 2020: 8, 2024: 8, 2028: 8
@@ -197,9 +209,11 @@ FINGERPRINTS = {
 
 DBC: Dict[str, Dict[str, str]] = defaultdict(lambda: dbc_dict('gm_global_a_powertrain_generated', 'gm_global_a_object', chassis_dbc='gm_global_a_chassis'))
 
-EV_CAR = {CAR.VOLT, CAR.BOLT_EUV, CAR.BOLT_EV}
+EV_CAR = {CAR.VOLT, CAR.BOLT_EUV, CAR.BOLT_EV, CAR.BOLT_EV_CC}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
-CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.BOLT_EV}
+CAMERA_ACC_CAR = {CAR.BOLT_EUV, CAR.BOLT_EV, CAR.BOLT_EV_CC}
+
+CC_ONLY_CAR = {CAR.BOLT_EV_CC}
 
 STEER_THRESHOLD = 1.0

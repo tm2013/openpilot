@@ -5,7 +5,7 @@ from panda import Panda
 
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, create_button_enable_events, create_button_event, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
-from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
+from selfdrive.car.gm.values import CAR, CC_ONLY_CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
 
 ButtonType = car.CarState.ButtonEvent.Type
@@ -63,10 +63,11 @@ class CarInterface(CarInterfaceBase):
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
       
-      # Note: Remove prior to lifting draft status on PR
-      ret.enableGasInterceptor = 0x201 in fingerprint[0]
-      if ret.enableGasInterceptor:
-        ret.openpilotLongitudinalControl = True
+      if candidate in CC_ONLY_CAR:
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
+        ret.enableGasInterceptor = 0x201 in fingerprint[0]
+        if ret.enableGasInterceptor:
+          ret.openpilotLongitudinalControl = True
       
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
@@ -167,7 +168,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    elif candidate == CAR.BOLT_EV:
+    elif candidate == CAR.BOLT_EV or CAR.BOLT_EV_CC:
       ret.minEnableSpeed = -1
       ret.mass = 1669. + STD_CARGO_KG
       ret.wheelbase = 2.601
@@ -176,11 +177,8 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 1.0
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
-      # No ACC settings
-      ret.pcmCruise = False
-      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
-      
 
+      # TODO: Leave here or split car params?
       if ret.enableGasInterceptor:
         #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [0., 35.0]
