@@ -168,7 +168,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    elif candidate == CAR.BOLT_EV or CAR.BOLT_EV_CC:
+    elif candidate == CAR.BOLT_EV_CC:
       ret.minEnableSpeed = -1
       ret.mass = 1669. + STD_CARGO_KG
       ret.wheelbase = 2.601
