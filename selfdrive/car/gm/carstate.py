@@ -104,8 +104,7 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
-    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA, passive)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA, False)
 
   @staticmethod
   def get_can_parser(CP):
@@ -159,8 +158,8 @@ class CarState(CarStateBase):
       signals.append(("RegenPaddle", "EBCMRegenPaddle"))
       checks.append(("EBCMRegenPaddle", 50))
 
-    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN, passive)
+    #passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN, False)
 
   @staticmethod
   def get_loopback_can_parser(CP):
@@ -175,5 +174,5 @@ class CarState(CarStateBase):
       #                             EPS will tolerate around 200ms when active before faulting
     ]
     # TODO: Loopback causes errors whenever OP isn't sending LKAS frames...
-    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, passive)
+    #passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, False)
