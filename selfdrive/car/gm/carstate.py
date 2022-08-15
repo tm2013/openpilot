@@ -16,7 +16,11 @@ class CarState(CarStateBase):
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
     self.shifter_values = can_define.dv["ECMPRDNL2"]["PRNDL2"]
     self.lka_steering_cmd_counter = 0
-
+    self.passive = False
+    if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput:
+      self.passive = True
+  
+  
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
 
@@ -100,8 +104,8 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
-
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA)
+    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA, passive)
 
   @staticmethod
   def get_can_parser(CP):
@@ -155,7 +159,8 @@ class CarState(CarStateBase):
       signals.append(("RegenPaddle", "EBCMRegenPaddle"))
       checks.append(("EBCMRegenPaddle", 50))
 
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN)
+    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN, passive)
 
   @staticmethod
   def get_loopback_can_parser(CP):
@@ -170,4 +175,5 @@ class CarState(CarStateBase):
       #                             EPS will tolerate around 200ms when active before faulting
     ]
     # TODO: Loopback causes errors whenever OP isn't sending LKAS frames...
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, enforce_checks = not CP.dashcamOnly)
+    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, passive)
