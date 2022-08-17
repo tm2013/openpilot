@@ -178,14 +178,13 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-      # TODO: Leave here or split car params?
       if ret.enableGasInterceptor:
         #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [0., 35.0]
         ret.longitudinalTuning.kpV = [0.4, 0.06] 
         ret.longitudinalTuning.kiBP = [0., 35.0] 
         ret.longitudinalTuning.kiV = [0.0, 0.04]
-        ret.longitudinalTuning.kf = 0.25
+        ret.longitudinalTuning.kf = 0.3
         ret.stoppingDecelRate = 0.8  # reach stopping target smoothly, brake_travel/s while trying to stop
         ret.stopAccel = 0. # Required acceleraton to keep vehicle stationary
         ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
