@@ -126,7 +126,7 @@ class CarController:
               
               if not CC.longActive:
                 pedal_gas = 0.0 # May not be needed with the enable param
-                  
+              idx = (self.frame // 4) % 4
               can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
             else:
               if self.CP.carFingerprint in EV_CAR:
