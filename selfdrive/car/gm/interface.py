@@ -68,6 +68,7 @@ class CarInterface(CarInterfaceBase):
         ret.enableGasInterceptor = 0x201 in fingerprint[0]
         if ret.enableGasInterceptor:
           ret.openpilotLongitudinalControl = True
+          ret.pcmCruise = False
       
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
