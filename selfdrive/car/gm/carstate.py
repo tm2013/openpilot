@@ -50,8 +50,12 @@ class CarState(CarStateBase):
     if self.CP.transmissionType == TransmissionType.direct:
       ret.brakePressed = ret.brakePressed or pt_cp.vl["EBCMRegenPaddle"]["RegenPaddle"] != 0
 
-    ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
-    ret.gasPressed = ret.gas > 1e-5
+    if self.CP.enableGasInterceptor:
+      ret.gas = (pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS"] + pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS2"]) / 2.
+      ret.gasPressed = ret.gas > 15
+    else:
+      ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
+      ret.gasPressed = ret.gas > 1e-5
 
     ret.steeringAngleDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelAngle"]
     ret.steeringRateDeg = pt_cp.vl["PSCMSteeringAngle"]["SteeringWheelRate"]
@@ -78,6 +82,8 @@ class CarState(CarStateBase):
 
     ret.parkingBrake = pt_cp.vl["VehicleIgnitionAlt"]["ParkBrake"] == 1
     ret.cruiseState.available = pt_cp.vl["ECMEngineStatus"]["CruiseMainOn"] != 0
+    if self.CP.enableGasInterceptor: # Flip CC main logic when pedal is being used for long TODO: switch to cancel cc
+      ret.cruiseState.available = (not ret.cruiseState.available)
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
     
     if self.CP.carFingerprint in CC_ONLY_CAR:
@@ -94,6 +100,7 @@ class CarState(CarStateBase):
     if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR:
       # TODO: Get regular CC setpoint...
       ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
+
 
     return ret
 
@@ -157,6 +164,11 @@ class CarState(CarStateBase):
     if CP.transmissionType == TransmissionType.direct:
       signals.append(("RegenPaddle", "EBCMRegenPaddle"))
       checks.append(("EBCMRegenPaddle", 50))
+      
+    if CP.enableGasInterceptor:
+      signals.append(("INTERCEPTOR_GAS", "GAS_SENSOR"))
+      signals.append(("INTERCEPTOR_GAS2", "GAS_SENSOR"))
+      checks.append(("GAS_SENSOR", 50))
 
     #passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN, False)
