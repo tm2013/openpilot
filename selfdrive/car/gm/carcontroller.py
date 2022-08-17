@@ -173,7 +173,6 @@ class CarController:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
           if self.CP.carFingerprint in CC_ONLY_CAR:
-            #TODO: Testing button spamming on CC-only Bolts (cross fingers)
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.CANCEL))
           else:
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CruiseButtons.CANCEL))
