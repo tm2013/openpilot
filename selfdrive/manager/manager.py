@@ -42,12 +42,16 @@ def manager_init() -> None:
     ("HasAcceptedTerms", "0"),
     ("LanguageSetting", "main_en"),
     ("OpenpilotEnabledToggle", "1"),
+    ("RecordRoad", "1"),
   ]
   if not PC:
     default_params.append(("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')))
 
   if params.get_bool("RecordFrontLock"):
     params.put_bool("RecordFront", True)
+    
+  if params.get_bool("RecordRoadLock"):
+    params.put_bool("RecordRoad", True)
 
   # set unset params
   for k, v in default_params:
