@@ -16,10 +16,6 @@ class CarState(CarStateBase):
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
     self.shifter_values = can_define.dv["ECMPRDNL2"]["PRNDL2"]
     self.lka_steering_cmd_counter = 0
-    self.passive = False
-    if CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput:
-      self.passive = True
-  
   
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
@@ -87,19 +83,21 @@ class CarState(CarStateBase):
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
     
     if self.CP.carFingerprint in CC_ONLY_CAR:
-      # TODO: Seek out CC state (may need to force fault...)
-      ret.accFaulted = False
+      # TODO: Seek out CC state (may need to force fault...). CC may be harder to fault...
+      ret.accFaulted = False # CC-only cars seem to always have value of AccState.FAULTED (3)
       ret.cruiseState.enabled = pt_cp.vl["ECMEngineStatus"]["CruiseActive"] == 1
-      ret.cruiseState.standstill = False # Not possible with CC...
+      ret.cruiseState.standstill = False # Not possible with CC?
     else:
       ret.accFaulted = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED # Always 3 with CC
       ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
       ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
       
     
-    if self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR:
-      # TODO: Get regular CC setpoint...
-      ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
+    if self.CP.networkLocation == NetworkLocation.fwdCamera:
+      if self.CP.carFingerprint in CC_ONLY_CAR:
+        ret.cruiseState.speed = (cam_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] / 16) * CV.KPH_TO_MS
+      else:
+        ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
 
 
     return ret
@@ -111,7 +109,7 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA, False)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA)
 
   @staticmethod
   def get_can_parser(CP):
@@ -161,6 +159,11 @@ class CarState(CarStateBase):
       ("EBCMBrakePedalPosition", 100),
     ]
 
+
+    if CP.carFingerprint in CC_ONLY_CAR:
+      signals.append(("CruiseSetSpeed", "ECMCruiseControl"))
+      checks.append(("ECMCruiseControl", 10))
+
     if CP.transmissionType == TransmissionType.direct:
       signals.append(("RegenPaddle", "EBCMRegenPaddle"))
       checks.append(("EBCMRegenPaddle", 50))
@@ -170,21 +173,20 @@ class CarState(CarStateBase):
       signals.append(("INTERCEPTOR_GAS2", "GAS_SENSOR"))
       checks.append(("GAS_SENSOR", 50))
 
-    #passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN, False)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.POWERTRAIN)
 
   @staticmethod
   def get_loopback_can_parser(CP):
+    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
     signals = [
       ("RollingCounter", "ASCMLKASteeringCmd"),
     ]
 
     checks = [
+      # TODO: Test this to ensure Dashcam mode works
       # TODO: This check causes false startup errors and console spamming...
-      ("ASCMLKASteeringCmd", 10), # 10 Hz is the stock inactive rate (every 100ms).
+      ("ASCMLKASteeringCmd", 0 if passive else 10), # 10 Hz is the stock inactive rate (every 100ms).
       #                             While active 50 Hz (every 20 ms) is normal
       #                             EPS will tolerate around 200ms when active before faulting
     ]
-    # TODO: Loopback causes errors whenever OP isn't sending LKAS frames...
-    #passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, False)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, passive)
