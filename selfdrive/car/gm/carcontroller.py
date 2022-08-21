@@ -143,10 +143,10 @@ class CarController:
           
           speedDiff = speedSetPoint - speedActuator
           if speedDiff > 0:
-            cloudlog.info(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Resume")
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Resume")
             btn = CruiseButtons.RES_ACCEL
           elif speedDiff < 0:
-            cloudlog.info(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Set")
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Set")
             btn = CruiseButtons.DECEL_SET
           
           # Stock longitudinal, integrated at camera
@@ -155,9 +155,10 @@ class CarController:
             self.last_button_frame = self.frame
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn))
             # TODO: see if this is necessary - successfully unpressing is vital or we get runaway speed...
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
+            # TODO: Note: Unpress is sent when nothing is pressed so the car will be sending it too
+            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
+            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
+            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
           
           
           # END CC-ACC #######
@@ -206,7 +207,7 @@ class CarController:
       if (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
-          cloudlog.info("Spamming Cancel")
+          cloudlog.error("Spamming Cancel")
           if self.CP.carFingerprint in CC_ONLY_CAR:
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.CANCEL))
           else:
