@@ -87,6 +87,7 @@ class CarState(CarStateBase):
       ret.accFaulted = False # CC-only cars seem to always have value of AccState.FAULTED (3)
       ret.cruiseState.enabled = pt_cp.vl["ECMEngineStatus"]["CruiseActive"] == 1
       ret.cruiseState.standstill = False # Not possible with CC?
+      ret.cruiseState.nonAdaptive = True
     else:
       ret.accFaulted = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED # Always 3 with CC
       ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
