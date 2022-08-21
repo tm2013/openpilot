@@ -135,7 +135,7 @@ class CarController:
           
           # TODO: Handle other units...
           speedSetPoint = math.floor(CS.out.cruiseState.speed * CV.MS_TO_MPH)
-          speedActuator = math.floor(actuators * CV.MS_TO_MPH)
+          speedActuator = math.floor(actuators.speed * CV.MS_TO_MPH)
           
           # We will spam the up/down buttons till we reach the desired speed
           
