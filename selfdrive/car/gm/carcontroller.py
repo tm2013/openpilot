@@ -130,7 +130,7 @@ class CarController:
           idx = (self.frame // 4) % 4
           can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
           # END INTERCEPTOR ############################
-        elif self.CP.carFingerprint in CC_ONLY_CAR:
+        elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
           # BEGIN CC-ACC ######
           
           # TODO: Handle other units...
