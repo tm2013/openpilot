@@ -6,7 +6,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
+from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, EV_CAR
 from system.swaglog import cloudlog
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -139,21 +139,21 @@ class CarController:
           
           # We will spam the up/down buttons till we reach the desired speed
           
-          btn = CruiseButtons.INIT
-          
-          speedDiff = speedSetPoint - speedActuator
-          if speedDiff > 0:
+          speedDiff = (speedSetPoint - speedActuator)
+          if speedDiff >= 1:
             cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Resume")
-            btn = CruiseButtons.RES_ACCEL
-          elif speedDiff < 0:
+            btn2 = int(2)
+          elif speedDiff <= -1:
             cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Set")
-            btn = CruiseButtons.DECEL_SET
+            btn2 = int(3)
+          else:
+            btn2 = int(0)
           
           # Stock longitudinal, integrated at camera
-          if btn != CruiseButtons.INIT and (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
+          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.1):
             # TODO: prevent cross-mojo
             self.last_button_frame = self.frame
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn))
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn2))
             # TODO: see if this is necessary - successfully unpressing is vital or we get runaway speed...
             # TODO: Note: Unpress is sent when nothing is pressed so the car will be sending it too
             # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
@@ -209,9 +209,9 @@ class CarController:
           self.last_button_frame = self.frame
           cloudlog.error("Spamming Cancel")
           if self.CP.carFingerprint in CC_ONLY_CAR:
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.CANCEL))
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, 6))
           else:
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CruiseButtons.CANCEL))
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, 6))
 
     # Show green icon when LKA torque is applied, and
     # alarming orange icon when approaching torque limit.
