@@ -7,6 +7,7 @@ from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
 from selfdrive.car.gm import gmcan
 from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
+from system.swaglog import cloudlog
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 NetworkLocation = car.CarParams.NetworkLocation
@@ -142,8 +143,10 @@ class CarController:
           
           speedDiff = speedSetPoint - speedActuator
           if speedDiff > 0:
+            cloudlog.info(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Resume")
             btn = CruiseButtons.RES_ACCEL
           elif speedDiff < 0:
+            cloudlog.info(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Set")
             btn = CruiseButtons.DECEL_SET
           
           # Stock longitudinal, integrated at camera
