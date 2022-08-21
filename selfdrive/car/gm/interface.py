@@ -65,6 +65,9 @@ class CarInterface(CarInterfaceBase):
       
       if candidate in CC_ONLY_CAR:
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
+        # TODO: Add Toggle
+        ret.openpilotLongitudinalControl = True
+        
         ret.enableGasInterceptor = 0x201 in fingerprint[0]
         if ret.enableGasInterceptor:
           ret.openpilotLongitudinalControl = True
