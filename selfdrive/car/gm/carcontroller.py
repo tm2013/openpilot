@@ -132,7 +132,7 @@ class CarController:
           # END INTERCEPTOR ############################
         elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
           # BEGIN CC-ACC ######
-          
+          # TODO: Apparently there are rounding issues.
           # TODO: Handle other units...
           speedSetPoint = math.floor(CS.out.cruiseState.speed * CV.MS_TO_MPH)
           speedActuator = math.floor(actuators.speed * CV.MS_TO_MPH)
@@ -206,6 +206,7 @@ class CarController:
       if (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
+          cloudlog.info("Spamming Cancel")
           if self.CP.carFingerprint in CC_ONLY_CAR:
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.CANCEL))
           else:
