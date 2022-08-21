@@ -130,8 +130,9 @@ class CarController:
           idx = (self.frame // 4) % 4
           can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
           # END INTERCEPTOR ############################
-        elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
+        elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR and ((self.frame - self.last_button_frame) * DT_CTRL > 0.05):
           # BEGIN CC-ACC ######
+          # TODO: Cleanup the timing - looks like normal is 10hz / 100ms. We'll allow double spped (50ms) ala nyquist
           # TODO: Apparently there are rounding issues.
           # TODO: Handle other units...
           speedSetPoint = math.floor(CS.out.cruiseState.speed * CV.MS_TO_MPH)
@@ -141,10 +142,10 @@ class CarController:
           
           speedDiff = (speedSetPoint - speedActuator)
           if speedDiff >= 1:
-            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Resume")
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Resume")
             btn2 = int(2)
           elif speedDiff <= -1:
-            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedSetPoint}, Difference: {speedDiff}: Spamming Set")
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Set")
             btn2 = int(3)
           else:
             btn2 = int(0)
