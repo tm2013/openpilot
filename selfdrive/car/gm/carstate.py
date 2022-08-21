@@ -95,7 +95,7 @@ class CarState(CarStateBase):
     
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       if self.CP.carFingerprint in CC_ONLY_CAR:
-        ret.cruiseState.speed = (cam_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] / 16) * CV.KPH_TO_MS
+        ret.cruiseState.speed = (pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"] / 16) * CV.KPH_TO_MS
       else:
         ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
 
