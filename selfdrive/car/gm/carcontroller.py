@@ -41,6 +41,7 @@ class CarController:
     self.apply_brake = 0
     self.frame = 0
     self.last_button_frame = 0
+    self.last_button_sent = 0
 
     self.lka_steering_cmd_counter_last = -1
     self.lka_icon_status_last = (False, False)
@@ -130,7 +131,7 @@ class CarController:
           idx = (self.frame // 4) % 4
           can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
           # END INTERCEPTOR ############################
-        elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR and ((self.frame - self.last_button_frame) * DT_CTRL > 0.05):
+        elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
           # BEGIN CC-ACC ######
           # TODO: Cleanup the timing - looks like normal is 10hz / 100ms. We'll allow double spped (50ms) ala nyquist
           # TODO: Apparently there are rounding issues.
@@ -140,7 +141,7 @@ class CarController:
           
           # We will spam the up/down buttons till we reach the desired speed
           
-          speedDiff = (speedSetPoint - speedActuator)
+          speedDiff = (speedActuator - speedSetPoint)
           if speedDiff >= 1:
             cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Resume")
             btn2 = int(2)
@@ -150,18 +151,11 @@ class CarController:
           else:
             btn2 = int(0)
           
-          # Stock longitudinal, integrated at camera
-          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.1):
-            # TODO: prevent cross-mojo
+          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.05):
             self.last_button_frame = self.frame
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn2))
-            # TODO: see if this is necessary - successfully unpressing is vital or we get runaway speed...
-            # TODO: Note: Unpress is sent when nothing is pressed so the car will be sending it too
-            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
-            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
-            # can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CruiseButtons.UNPRESS))
-          
-          
+            CC.cruiseControl.resume = True
+            
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn2))          
           # END CC-ACC #######
         else:
           if self.CP.carFingerprint in EV_CAR:
