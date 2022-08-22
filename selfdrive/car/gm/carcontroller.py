@@ -150,8 +150,12 @@ class CarController:
             btn2 = int(3)
           else:
             btn2 = int(0)
-          
-          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.05):
+          # When we spam the speed too fast, it nerfs the cc - trying longer delay
+          # less than ideal for sure...
+          # TODO: set-point isn't showing. Not sure if spam is changing setpoint
+          # Check rlogs closely - our message shouldn't show up on the pt bus for us
+          # Or bus 2, since we're forwarding... but I think it does
+          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.200):
             self.last_button_frame = self.frame
             CC.cruiseControl.resume = True
             
