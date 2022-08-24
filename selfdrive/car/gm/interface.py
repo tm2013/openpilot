@@ -336,6 +336,8 @@ class CarInterface(CarInterfaceBase):
         ret.lateralTuning.pid.kf = 1. # !!! ONLY for sigmoid feedforward !!!
 
       if ret.enableGasInterceptor:
+        ret.longitudinalActuatorDelayLowerBound = 0.06
+        ret.longitudinalActuatorDelayUpperBound = 0.08
         #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [0., 35.0]
         ret.longitudinalTuning.kpV = [0.4, 0.06] 
