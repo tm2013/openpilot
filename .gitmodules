@@ -3,7 +3,7 @@
 	url = ../../opgm/panda.git
 [submodule "opendbc"]
 	path = opendbc
-	url = ../../opgm/opendbc.git
+	url = ../../nworb-cire/opendbc.git
 [submodule "laika_repo"]
 	path = laika_repo
 	url = ../../commaai/laika.git
