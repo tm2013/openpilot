@@ -59,6 +59,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
       "../assets/offroad/icon_disengage_on_accelerator.svg",
     },
+    {
+      "SteerAssist",
+      tr("Steer Assist Mode"),
+      tr("When Enabled, OP provides Lane Centering regardless of Cruise state"),
+      "../assets/offroad/icon_disengage_on_accelerator.svg",
+    },
 #ifdef ENABLE_MAPS
     {
       "NavSettingTime24h",

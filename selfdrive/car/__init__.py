@@ -24,7 +24,7 @@ def create_button_event(cur_but: int, prev_but: int, buttons_dict: Dict[int, cap
   return be
 
 
-def create_button_enable_events(buttonEvents: capnp.lib.capnp._DynamicListBuilder, pcm_cruise: bool = False) -> List[int]:
+def create_button_enable_events(buttonEvents: capnp.lib.capnp._DynamicListBuilder, pcm_cruise: bool = False, steer_assist = False) -> List[int]:
   events = []
   for b in buttonEvents:
     # do enable on both accel and decel buttons
@@ -32,7 +32,8 @@ def create_button_enable_events(buttonEvents: capnp.lib.capnp._DynamicListBuilde
       if b.type in (ButtonType.accelCruise, ButtonType.decelCruise) and not b.pressed:
         events.append(EventName.buttonEnable)
     # do disable on button down
-    if b.type == ButtonType.cancel and b.pressed:
+    if b.type == ButtonType.cancel and b.pressed and not steer_assist:
+      # This should prevent OP from seeing a cancel event
       events.append(EventName.buttonCancel)
   return events
 

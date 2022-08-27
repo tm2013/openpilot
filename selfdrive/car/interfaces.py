@@ -9,6 +9,7 @@ from common.basedir import BASEDIR
 from common.conversions import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 from common.realtime import DT_CTRL
+from common.params import Params
 from selfdrive.car import create_button_enable_events, gen_empty_fingerprint
 from selfdrive.controls.lib.drive_helpers import V_CRUISE_MAX
 from selfdrive.controls.lib.events import Events
@@ -62,6 +63,7 @@ class CarInterfaceBase(ABC):
     self.low_speed_alert = False
     self.silent_steer_warning = True
     self.v_ego_cluster_seen = False
+    self.steer_assist = Params().get_bool("SteerAssist")
 
     self.CS = None
     self.can_parsers = []
@@ -182,7 +184,7 @@ class CarInterfaceBase(ABC):
   def apply(self, c: car.CarControl) -> Tuple[car.CarControl.Actuators, List[bytes]]:
     pass
 
-  def create_common_events(self, cs_out, extra_gears=None, pcm_enable=True, allow_enable=True):
+  def create_common_events(self, cs_out, extra_gears=None, pcm_enable=True, allow_enable=True, steer_assist=False):
     events = Events()
 
     if cs_out.doorOpen:
@@ -214,7 +216,7 @@ class CarInterfaceBase(ABC):
       events.add(EventName.accFaulted)
 
     # Handle button presses
-    events.events.extend(create_button_enable_events(cs_out.buttonEvents, pcm_cruise=self.CP.pcmCruise))
+    events.events.extend(create_button_enable_events(cs_out.buttonEvents, pcm_cruise=self.CP.pcmCruise, steer_assist=steer_assist))
 
     # Handle permanent and temporary steering faults
     self.steering_unpressed = 0 if cs_out.steeringPressed else self.steering_unpressed + 1
@@ -236,7 +238,9 @@ class CarInterfaceBase(ABC):
       if cs_out.cruiseState.enabled and not self.CS.out.cruiseState.enabled and allow_enable:
         events.add(EventName.pcmEnable)
       elif not cs_out.cruiseState.enabled:
-        events.add(EventName.pcmDisable)
+        # Another dirty dirty hack
+        events.add(EventName.gasPressedOverride)
+        #events.add(EventName.pcmDisable)
 
     return events
 
