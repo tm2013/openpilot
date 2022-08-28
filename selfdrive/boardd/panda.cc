@@ -321,6 +321,11 @@ void Panda::set_loopback(bool loopback) {
   usb_write(0xe5, loopback, 0);
 }
 
+// bus only applies to gray/white pandas
+void Panda::set_gmlan(bool gmlan, int bus) {
+  usb_write(0xdb, gmlan, bus);
+}
+
 std::optional<std::vector<uint8_t>> Panda::get_firmware_version() {
   std::vector<uint8_t> fw_sig_buf(128);
   int read_1 = usb_read(0xd3, 0, 0, &fw_sig_buf[0], 64);
