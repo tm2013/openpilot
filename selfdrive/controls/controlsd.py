@@ -556,7 +556,7 @@ class Controls:
           else:
             self.state = State.enabled
           self.current_alert_types.append(ET.ENABLE)
-          if not self.CP.pcmCruise:
+          if not self.CP.pcmCruise or self.CP.carFingerprint in CC_ONLY_CAR:
             self.v_cruise_kph = initialize_v_cruise(CS.vEgo, CS.buttonEvents, self.v_cruise_kph_last)
             self.v_cruise_cluster_kph = self.v_cruise_kph
 
