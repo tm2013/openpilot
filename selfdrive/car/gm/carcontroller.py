@@ -6,7 +6,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, EV_CAR
+from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
 from system.swaglog import cloudlog
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -39,9 +39,9 @@ class CarController:
     self.apply_steer_last = 0
     self.apply_gas = 0
     self.apply_brake = 0
+    self.apply_speed = 0
     self.frame = 0
     self.last_button_frame = 0
-    self.last_button_sent = 0
 
     self.lka_steering_cmd_counter_last = -1
     self.lka_icon_status_last = (False, False)
@@ -133,33 +133,36 @@ class CarController:
           # END INTERCEPTOR ############################
         elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
           # BEGIN CC-ACC ######
-          # TODO: Cleanup the timing - looks like normal is 10hz / 100ms. We'll allow double spped (50ms) ala nyquist
-          # TODO: Apparently there are rounding issues.
+          # TODO: Cleanup the timing - normal is every 30ms...
+
           # TODO: Handle other units...
-          speedSetPoint = math.floor(CS.out.cruiseState.speed * CV.MS_TO_MPH)
+          # 1 mph = 0.44704 m/s
+          # 1 m/s = 2.23694 mph
+          #speedDiffMS = actuators.speed - CS.out.cruiseState.speed
+          
+          # TODO: Apparently there are rounding issues.
+          speedSetPoint = int(round(CS.out.cruiseState.speed * CV.MS_TO_MPH))
           speedActuator = math.floor(actuators.speed * CV.MS_TO_MPH)
+          speedDiff = (speedActuator - speedSetPoint)
+          
+          cruiseBtn = CruiseButtons.INIT
           
           # We will spam the up/down buttons till we reach the desired speed
-          
-          speedDiff = (speedActuator - speedSetPoint)
-          if speedDiff >= 1:
-            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Resume")
-            btn2 = int(2)
-          elif speedDiff <= -1:
-            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Set")
-            btn2 = int(3)
-          else:
-            btn2 = int(0)
-          # When we spam the speed too fast, it nerfs the cc - trying longer delay
-          # less than ideal for sure...
+          if speedDiff > 0:
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Resume+")
+            cruiseBtn = CruiseButtons.RES_ACCEL
+          elif speedDiff < 0:
+            cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Set-")
+            cruiseBtn = CruiseButtons.DECEL_SET
+            
           # TODO: set-point isn't showing. Not sure if spam is changing setpoint
           # Check rlogs closely - our message shouldn't show up on the pt bus for us
           # Or bus 2, since we're forwarding... but I think it does
-          if (btn2 != 0) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.200):
+          # TODO: Cleanup the timing - normal is every 30ms...
+          if (cruiseBtn != CruiseButtons.INIT) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.04):
             self.last_button_frame = self.frame
-            CC.cruiseControl.resume = True
-            
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, btn2))          
+            self.apply_speed = speedActuator
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, cruiseBtn))          
           # END CC-ACC #######
         else:
           if self.CP.carFingerprint in EV_CAR:
@@ -203,14 +206,14 @@ class CarController:
 
     else:
       # Stock longitudinal, integrated at camera
-      if (self.frame - self.last_button_frame) * DT_CTRL > 0.1:
+      if (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
           cloudlog.error("Spamming Cancel")
           if self.CP.carFingerprint in CC_ONLY_CAR:
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, 6))
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, CruiseButtons.CANCEL))
           else:
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, 6))
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.CANCEL))
 
     # Show green icon when LKA torque is applied, and
     # alarming orange icon when approaching torque limit.
@@ -230,6 +233,7 @@ class CarController:
     new_actuators.steer = self.apply_steer_last / self.params.STEER_MAX
     new_actuators.gas = self.apply_gas
     new_actuators.brake = self.apply_brake
+    new_actuators.speed = self.apply_speed
 
     self.frame += 1
     return new_actuators, can_sends
