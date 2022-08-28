@@ -178,6 +178,7 @@ bool safety_setter_thread(std::vector<Panda *> pandas) {
     LOGW("panda %d: setting safety model: %d, param: %d, alternative experience: %d", i, (int)safety_model, safety_param, alternative_experience);
     panda->set_alternative_experience(alternative_experience);
     panda->set_safety_model(safety_model, safety_param);
+    panda->set_gmlan(true, 2);
   }
 
   return true;
@@ -196,6 +197,7 @@ Panda *usb_connect(std::string serial="", uint32_t index=0) {
     panda->set_loopback(true);
   }
   //TODO: JJS: This is hardcoded and naughty
+  //print("Enabling GMLAN");
   panda->set_gmlan(true, 2);
   //panda->enable_deepsleep();
 
