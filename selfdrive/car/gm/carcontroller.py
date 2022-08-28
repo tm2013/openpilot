@@ -6,7 +6,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
+from selfdrive.car.gm.values import CAMERA_ACC_CAR, CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
 from system.swaglog import cloudlog
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
@@ -154,17 +154,16 @@ class CarController:
           elif speedDiff < 0:
             cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Set-")
             cruiseBtn = CruiseButtons.DECEL_SET
-            
-          # TODO: set-point isn't showing. Not sure if spam is changing setpoint
+
           # Check rlogs closely - our message shouldn't show up on the pt bus for us
           # Or bus 2, since we're forwarding... but I think it does
           # TODO: Cleanup the timing - normal is every 30ms...
-          if (cruiseBtn != CruiseButtons.INIT) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.04):
+          if (cruiseBtn != CruiseButtons.INIT) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.63):
             self.last_button_frame = self.frame
             self.apply_speed = speedActuator
             can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, cruiseBtn))          
           # END CC-ACC #######
-        else:
+        elif self.CP.carFingerprint not in CAMERA_ACC_CAR:
           if self.CP.carFingerprint in EV_CAR:
             self.apply_gas = int(round(interp(actuators.accel, self.params.EV_GAS_LOOKUP_BP, self.params.GAS_LOOKUP_V)))
             self.apply_brake = int(round(interp(actuators.accel, self.params.EV_BRAKE_LOOKUP_BP, self.params.BRAKE_LOOKUP_V)))
