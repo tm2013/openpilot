@@ -82,6 +82,7 @@ class Panda {
   void set_ir_pwr(uint16_t ir_pwr);
   std::optional<health_t> get_state();
   void set_loopback(bool loopback);
+  void set_gmlan(bool gmlan, int bus);
   std::optional<std::vector<uint8_t>> get_firmware_version();
   std::optional<std::string> get_serial();
   void set_power_saving(bool power_saving);

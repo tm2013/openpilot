@@ -76,8 +76,8 @@ Panda::Panda(std::string serial, uint32_t bus_offset) : bus_offset(bus_offset) {
 
   hw_type = get_hw_type();
 
-  assert((hw_type != cereal::PandaState::PandaType::WHITE_PANDA) &&
-         (hw_type != cereal::PandaState::PandaType::GREY_PANDA));
+  // assert((hw_type != cereal::PandaState::PandaType::WHITE_PANDA) &&
+  //        (hw_type != cereal::PandaState::PandaType::GREY_PANDA));
 
   has_rtc = (hw_type == cereal::PandaState::PandaType::UNO) ||
             (hw_type == cereal::PandaState::PandaType::DOS);
@@ -319,6 +319,11 @@ std::optional<health_t> Panda::get_state() {
 
 void Panda::set_loopback(bool loopback) {
   usb_write(0xe5, loopback, 0);
+}
+
+// bus only applies to gray/white pandas
+void Panda::set_gmlan(bool gmlan, int bus) {
+  usb_write(0xdb, gmlan, bus);
 }
 
 std::optional<std::vector<uint8_t>> Panda::get_firmware_version() {

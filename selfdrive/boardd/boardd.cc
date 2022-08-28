@@ -195,6 +195,8 @@ Panda *usb_connect(std::string serial="", uint32_t index=0) {
   if (getenv("BOARDD_LOOPBACK")) {
     panda->set_loopback(true);
   }
+  //TODO: JJS: This is hardcoded and naughty
+  panda->set_gmlan(true, 2);
   //panda->enable_deepsleep();
 
   // power on charging, only the first time. Panda can also change mode and it causes a brief disconneciton
