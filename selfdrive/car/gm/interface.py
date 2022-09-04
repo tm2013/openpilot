@@ -4,6 +4,7 @@ from math import fabs
 from panda import Panda
 
 from common.conversions import Conversions as CV
+from common.params import Params
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
 from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
@@ -50,7 +51,9 @@ class CarInterface(CarInterfaceBase):
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.autoResumeSng = False
-
+    
+    override_long = Params().get_bool("OverrideLong")
+    
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
     else:
@@ -62,6 +65,10 @@ class CarInterface(CarInterfaceBase):
       ret.radarOffCan = True  # no radar
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
+      if override_long:
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_OP_LONG
+        ret.pcmCruise = False
+        ret.openpilotLongitudinalControl = True
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
       ret.networkLocation = NetworkLocation.gateway
@@ -189,6 +196,7 @@ class CarInterface(CarInterfaceBase):
       be = create_button_event(self.CS.cruise_buttons, self.CS.prev_cruise_buttons, BUTTONS_DICT, CruiseButtons.UNPRESS)
 
       # Suppress resume button if we're resuming from stop so we don't adjust speed.
+      # TODO: Determine how this applies when spamming resume
       if be.type == ButtonType.accelCruise and (ret.cruiseState.enabled and ret.standstill):
         be.type = ButtonType.unknown
 

@@ -81,7 +81,14 @@ class CarController:
         near_stop = CC.longActive and (CS.out.vEgo < self.params.NEAR_STOP_BRAKE_PHASE)
         # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
         can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, CC.enabled, at_full_stop))
-        can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, CanBus.CHASSIS, self.apply_brake, idx, near_stop, at_full_stop))
+        if self.CP.networkLocation == NetworkLocation.gateway:
+          can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, CanBus.CHASSIS, self.apply_brake, idx, near_stop, at_full_stop))
+        else:
+          # Note: Friction brake is on PT bus for vehicles with factory VOACC
+          # TODO: we don't have the means of differentiating camera-based vs K14 DSCCM (ala suburban & Tahoe)
+          # Currently we just assume that cam harness = cam-based ACC and this isn't always the case.
+          # Note: blocking the stock ACC when there is a DSCCM will require ISO-TP / UDS
+          can_sends.append(gmcan.create_friction_brake_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_brake, idx, near_stop, at_full_stop))
 
         # Send dashboard UI commands (ACC status)
         send_fcw = hud_alert == VisualAlert.fcw
@@ -109,10 +116,19 @@ class CarController:
 
     else:
       # Stock longitudinal, integrated at camera
-      if (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
+      if (self.frame - self.last_button_frame) * DT_CTRL > 0.063:
         if CC.cruiseControl.cancel:
           self.last_button_frame = self.frame
-          can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, CS.buttons_counter, CruiseButtons.CANCEL))
+          can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, (CS.buttons_counter + 1) % 4, CruiseButtons.CANCEL))
+          if (self.CP.networkLocation == NetworkLocation.fwdCamera):
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, (CS.buttons_counter + 1) % 4, CruiseButtons.CANCEL))
+
+    if (self.frame - self.last_button_frame) * DT_CTRL > 0.063:
+      if CC.cruiseControl.resume:
+        self.last_button_frame = self.frame
+        can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, (CS.buttons_counter + 1) % 4, CruiseButtons.RES_ACCEL))
+        if (self.CP.networkLocation == NetworkLocation.fwdCamera):
+          can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.CAMERA, (CS.buttons_counter + 1) % 4, CruiseButtons.RES_ACCEL))
 
     # Show green icon when LKA torque is applied, and
     # alarming orange icon when approaching torque limit.

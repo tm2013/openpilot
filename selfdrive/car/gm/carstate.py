@@ -152,14 +152,16 @@ class CarState(CarStateBase):
 
   @staticmethod
   def get_loopback_can_parser(CP):
+    # This CNParser has been causing false CAN errors at startup
+    # Not sure the enforcement makes sense on a loopback bus
     signals = [
       ("RollingCounter", "ASCMLKASteeringCmd"),
     ]
 
     checks = [
-      ("ASCMLKASteeringCmd", 10), # 10 Hz is the stock inactive rate (every 100ms).
+      ("ASCMLKASteeringCmd", 0), # 10 Hz is the stock inactive rate (every 100ms).
       #                             While active 50 Hz (every 20 ms) is normal
       #                             EPS will tolerate around 200ms when active before faulting
     ]
 
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, False)

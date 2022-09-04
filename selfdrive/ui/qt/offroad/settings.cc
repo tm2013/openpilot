@@ -65,6 +65,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
       "../assets/offroad/icon_disengage_on_accelerator.svg",
     },
+    {
+      "OverrideLong",
+      tr("Use OP for long instead of stock ACC"),
+      tr("OP disables or blocks the stock ACC and takes over longitudinal."),
+      "../assets/offroad/icon_speed_limit.png",
+    },
 #ifdef ENABLE_MAPS
     {
       "NavSettingTime24h",

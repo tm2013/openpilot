@@ -148,6 +148,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"NavSettingLeftSide", PERSISTENT},
     {"NavdRender", PERSISTENT},
     {"OpenpilotEnabledToggle", PERSISTENT},
+    {"OverrideLong", PERSISTENT}, //TODO: Toggle should be hidden for GM if ACC isn't camera-based (until we can disable ECUs)
     {"PandaHeartbeatLost", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_OFF},
     {"PandaSignatures", CLEAR_ON_MANAGER_START},
     {"Passive", PERSISTENT},
