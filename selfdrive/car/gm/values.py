@@ -25,7 +25,8 @@ class CarControllerParams:
 
   # Volt gasbrake lookups
   # TODO: These values should be confirmed on non-Volt vehicles
-  MAX_GAS = 3072  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
+  # TODO: MAX_GAS increased for Silverado / Sierra VOACC
+  MAX_GAS = 3600  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
   ZERO_GAS = 2048  # Coasting
   MAX_BRAKE = 350  # ~ -3.5 m/s^2 with regen
   MAX_ACC_REGEN = 1404  # Max ACC regen is slightly less than max paddle regen
