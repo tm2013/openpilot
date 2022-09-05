@@ -176,6 +176,12 @@ class CarInterface(CarInterfaceBase):
       ret.centerToFront = ret.wheelbase * 0.5
       tire_stiffness_factor = 1.0
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+      
+      
+      ret.longitudinalTuning.kpBP = [5., 20., 35.]
+      ret.longitudinalTuning.kpV = [2.3, 1.5, 1.5]
+      ret.longitudinalTuning.kiBP = [5., 20., 35.]
+      ret.longitudinalTuning.kiV = [0.30, 0.30, 0.28]
 
     # TODO: get actual value, for now starting with reasonable value for
     # civic and scaling by mass and wheelbase
