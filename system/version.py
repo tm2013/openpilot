@@ -7,7 +7,8 @@ from functools import lru_cache
 from common.basedir import BASEDIR
 from system.swaglog import cloudlog
 
-TESTED_BRANCHES = ['devel', 'release3-staging', 'dashcam3-staging', 'release3', 'dashcam3']
+# TODO: JJS: main isn't tested...
+TESTED_BRANCHES = ['main', 'develop', 'devel', 'master-ci', 'release3-staging', 'dashcam3-staging', 'release3', 'dashcam3']
 
 training_version: bytes = b"0.2.0"
 terms_version: bytes = b"2"
