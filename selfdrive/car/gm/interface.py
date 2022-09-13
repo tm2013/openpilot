@@ -98,6 +98,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 17.7  # Stock 15.7, LiveParameters
       tire_stiffness_factor = 0.469  # Stock Michelin Energy Saver A/S, LiveParameters
       ret.centerToFront = ret.wheelbase * 0.45  # Volt Gen 1, TODO corner weigh
+      ret.minSteerSpeed = 7 * CV.MPH_TO_MS
 
       ret.lateralTuning.pid.kpBP = [0., 40.]
       ret.lateralTuning.pid.kpV = [0., 0.17]
