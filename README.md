@@ -1,16 +1,72 @@
-![](https://i.imgur.com/b0ZyIx5.jpg)
+# OPGM - Wide compatibility openpilot port collection for GM Vehicles
+
+[![Chevy Equinox](https://img.youtube.com/vi/JzvtlIAAfkI/hqdefault.jpg)](http://www.youtube.com/watch?v=JzvtlIAAfkI "Step-by-step: Getting openpilot steering a 2020 Equinox")
+
 
 Table of Contents
 =======================
 
-* [What is openpilot?](#what-is-openpilot)
-* [Running in a car](#running-on-a-dedicated-device-in-a-car)
-* [Running on PC](#running-on-pc)
-* [Community and Contributing](#community-and-contributing)
-* [User Data and comma Account](#user-data-and-comma-account)
-* [Safety and Testing](#safety-and-testing)
-* [Directory Structure](#directory-structure)
-* [Licensing](#licensing)
+- [OPGM - Wide compatibility openpilot port collection for GM Vehicles](#opgm---wide-compatibility-openpilot-port-collection-for-gm-vehicles)
+- [Table of Contents](#table-of-contents)
+  - [What is OPGM?](#what-is-opgm)
+  - [What is openpilot?](#what-is-openpilot)
+  - [Running on a dedicated device in a car](#running-on-a-dedicated-device-in-a-car)
+  - [Running on PC](#running-on-pc)
+  - [Community and Contributing](#community-and-contributing)
+  - [User Data and comma Account](#user-data-and-comma-account)
+  - [Safety and Testing](#safety-and-testing)
+  - [Directory Structure](#directory-structure)
+  - [Licensing](#licensing)
+
+---
+What is OPGM?
+------
+
+OPGM is a fork of openpilot that enables level-2 autonomous driving support for many GM Vehicles not yet supported by comma.ai.
+This fork is regularly updated with the official upstream openpilot, typicically within a few days of
+their master branch (bleeding edge). The goal has always been to seek to upstream as much as possible,
+and we are remarkably close: the Silverado, GMC Sierra and Bolt EUV will likely be gaining
+official comma.ai support in the next few upstream releases. The Suburban, Tahoe, and 2022 Bolt EV LT2
+should be inbound very soon thereafter!
+
+The GM Camera Harness (previously referred to as the [Bolt EV Harness](https://oshwlab.com/jshuler/chevy-bolt-openpilot-harness)
+(See link for schematic) is also on the path to official support.
+It has been 3 LONG years in the making, but it looks like finally the goal is in sight!
+
+This support will effectively open the door for **official comma.ai support** (no need for custom Forks or hardware)
+for **ANY** GM vehicle with Lane-Keep Assist and Adaptive Cruise Control manufactured between 2016 and 2022 (with some exceptions...)
+
+OPGM isn't going anywhere any time soon either. Vehicles without built-in Adaptive Cruise will continue
+to be supported in OPGM with the use of a [Comma Pedal](https://github.com/commaai/openpilot/wiki/comma-pedal).
+I'm hoping to continue supporting the Comma 2, EON, and White/black panda hardware as long as possible
+(Note that this has been on hold due to upstreaming efforts)
+
+Don't feel like waiting for the upstream? You will need to purchase a few things.
+Get the following two products from comma.ai:
+
+* [comma three](https://comma.ai/shop/products/three) - Do not select a vehicle or harness in this step
+* [harness box](https://comma.ai/shop/products/harness-box)
+
+You will also need the GM Camera harness - you can make it yourself or buy one from BearTechWorkshop run by Discord user tinybear
+
+* [GM Camera Harness](https://www.etsy.com/listing/1067463521/harness-for-chevrolet-bolt-high-country)
+  * Note: I am submitting the schematics to comma.ai as part of the Silverado port - I expect they will eventually take over the manufacture
+* **Only if your car doesn't have Adaptive Cruise** [Comma Pedal](https://www.etsy.com/listing/952895642/openpilot-comma-pedal-non-customizable)
+  * Note 1: OPGM uses openpilot's vision-only ACC, which is not yet supported by comma.ai
+  * Note 2: The Pedal (currently) requires custom GM firmware (from the OPGM repo); flashing requires a special cable (you can also build yourself, buy from comma or tinybear)
+  * Note 3: OP with a Pedal performing ACC on a gas-powered vehicle is unable to apply the brakes (yet) - it still works well enough in many cases
+
+You can also hop on the [openpilot Community Discord](https://discord.gg/paWZxDcmqD) and / or the [official comma.ai Discord](https://discord.comma.ai) should you need assistance, or want to inquire about a new model.
+
+**OPGM is just as free and open source as openpilot... except all the effort is volunteer**. While never required, if you
+find this useful and would like to help keep it going, consider a donation!
+
+* [Donate via Paypal](https://paypal.me/jjshuler42)
+* [Donate via Venmo](https://venmo.com/JasonJShuler)
+* [Donate via Cash App](https://cash.app/$wibbleywobblrs)
+
+If you would like a shoutout on the [Stand Back Labs Youtube Channel](https://youtube.com/standbacklabs) please mention it in the
+comments!
 
 ---
 
