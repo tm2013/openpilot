@@ -103,8 +103,10 @@ class CarInterface(CarInterfaceBase):
 
     # supports stop and go, but initial engage must (conservatively) be above 18mph
     ret.minEnableSpeed = 18 * CV.MPH_TO_MS
+    if ret.enableGasInterceptor:
+          ret.minEnableSpeed = -1
 
-    if candidate == CAR.VOLT:
+    if candidate == CAR.VOLT or candidate == CAR.VOLT_NR:
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
       ret.steerRatio = 17.7  # Stock 15.7, LiveParameters
@@ -117,6 +119,22 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kiV = [0.]
       ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_volt()
       ret.steerActuatorDelay = 0.2
+
+      if ret.enableGasInterceptor:
+        ret.longitudinalActuatorDelayLowerBound = 0.06
+        ret.longitudinalActuatorDelayUpperBound = 0.08
+        #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
+        ret.longitudinalTuning.kpBP = [0., 35.0]
+        ret.longitudinalTuning.kpV = [0.4, 0.06] 
+        ret.longitudinalTuning.kiBP = [0., 35.0] 
+        ret.longitudinalTuning.kiV = [0.0, 0.04]
+        ret.longitudinalTuning.kf = 0.25
+        ret.stoppingDecelRate = 0.8  # reach stopping target smoothly, brake_travel/s while trying to stop
+        ret.stopAccel = 0. # Required acceleraton to keep vehicle stationary
+        ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
+        ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
+        # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
+        ret.stoppingControl = True
 
     elif candidate == CAR.MALIBU:
       ret.mass = 1496. + STD_CARGO_KG
