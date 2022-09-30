@@ -51,7 +51,6 @@ class CarController:
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint]['radar'])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint]['chassis'])
-    self.packer_body = CANPacker(DBC[self.CP.carFingerprint]['body'])
 
 
   def update(self, CC, CS):
@@ -131,7 +130,7 @@ class CarController:
             pedal_gas = 0.0 # May not be needed with the enable param
 
           idx = (self.frame // 4) % 4
-          can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
+          can_sends.append(create_gas_interceptor_command2(self.packer_pt, CC.longActive, pedal_gas, idx))
           # END INTERCEPTOR ############################
         elif CC.longActive and self.CP.carFingerprint in CC_ONLY_CAR:
           # BEGIN CC-ACC ######

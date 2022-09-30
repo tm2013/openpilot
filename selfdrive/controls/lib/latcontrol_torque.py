@@ -41,7 +41,7 @@ class LatControlTorque(LatControl):
     self.steering_angle_deadzone_deg = self.torque_params.steeringAngleDeadzoneDeg
 
 
-def reset(self):
+  def reset(self):
     super().reset()
     self.pid.reset()
 
@@ -50,7 +50,7 @@ def reset(self):
     self.torque_params.latAccelOffset = latAccelOffset
     self.torque_params.friction = friction
 
-  def update(self, active, CS, VM, params, last_actuators, desired_curvature, desired_curvature_rate, llk):
+  def update(self, active, CS, VM, params, last_actuators, steer_limited, desired_curvature, desired_curvature_rate, llk):
     pid_log = log.ControlsState.LateralTorqueState.new_message()
 
     if CS.vEgo < MIN_STEER_SPEED or not active:
@@ -86,7 +86,7 @@ def reset(self):
       # switch to left feedforward (negative curvature)
       if desired_curvature < 0.:
         ff *= self.kf_left_factor
-      freeze_integrator = CS.steeringRateLimited or CS.steeringPressed or CS.vEgo < 5
+      freeze_integrator = steer_limited or CS.steeringPressed or CS.vEgo < 5
       output_torque = self.pid.update(error,
                                       feedforward=ff,
                                       speed=CS.vEgo,

@@ -31,14 +31,25 @@ class CarInterface(CarInterfaceBase):
     return 0.10006696 * sigmoid * (v_ego + 3.12485927)
 
   @staticmethod
+  def get_steer_feedforward_volt_torque(desired_lateral_accel, v_ego):
+    ANGLE_COEF = 0.10000000
+    ANGLE_COEF2 = 0.13609369
+    ANGLE_OFFSET = 0.00215830
+    SPEED_OFFSET = -3.40740140
+    SIGMOID_COEF_RIGHT = 0.54324908
+    SIGMOID_COEF_LEFT = 0.48109872
+    SPEED_COEF = 0.59589789
+    return get_steer_feedforward_erf(desired_lateral_accel, v_ego, ANGLE_COEF, ANGLE_COEF2, ANGLE_OFFSET, SPEED_OFFSET, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT, SPEED_COEF)
+
+  @staticmethod
   def get_steer_feedforward_acadia(desired_angle, v_ego):
     desired_angle *= 0.09760208
     sigmoid = desired_angle / (1 + fabs(desired_angle))
     return 0.04689655 * sigmoid * (v_ego + 10.028217)
 
   def get_steer_feedforward_function(self):
-    if self.CP.carFingerprint == CAR.VOLT:
-      return self.get_steer_feedforward_volt
+    if self.CP.carFingerprint == CAR.VOLT or self.CP.carFingerprint == CAR.VOLT_NR:
+      return self.get_steer_feedforward_volt_torque
     elif self.CP.carFingerprint == CAR.ACADIA:
       return self.get_steer_feedforward_acadia
     else:
@@ -113,12 +124,21 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.469  # Stock Michelin Energy Saver A/S, LiveParameters
       ret.centerToFront = ret.wheelbase * 0.45  # Volt Gen 1, TODO corner weigh
 
-      ret.lateralTuning.pid.kpBP = [0., 40.]
-      ret.lateralTuning.pid.kpV = [0., 0.17]
-      ret.lateralTuning.pid.kiBP = [0.]
-      ret.lateralTuning.pid.kiV = [0.]
-      ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_volt()
-      ret.steerActuatorDelay = 0.2
+      # ret.lateralTuning.pid.kpBP = [0., 40.]
+      # ret.lateralTuning.pid.kpV = [0., 0.17]
+      # ret.lateralTuning.pid.kiBP = [0.]
+      # ret.lateralTuning.pid.kiV = [0.]
+      # ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_volt()
+      ret.steerActuatorDelay = 0.18
+
+      max_lateral_accel = 3.0
+      ret.lateralTuning.init('torque')
+      ret.lateralTuning.torque.useSteeringAngle = True
+      ret.lateralTuning.torque.kp = 1.8 / max_lateral_accel
+      ret.lateralTuning.torque.ki = 0.5 / max_lateral_accel
+      ret.lateralTuning.torque.kd = 5.0 / max_lateral_accel
+      ret.lateralTuning.torque.kf = 1.0 # use with custom torque ff
+      ret.lateralTuning.torque.friction = 0.005
 
       if ret.enableGasInterceptor:
         ret.longitudinalActuatorDelayLowerBound = 0.06
