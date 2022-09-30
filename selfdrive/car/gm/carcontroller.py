@@ -1,13 +1,13 @@
 import math
 from cereal import car
 from common.conversions import Conversions as CV
-from common.numpy_fast import interp, clip
 from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
-from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
+from common.numpy_fast import interp, clip
+from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command2
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import CAMERA_ACC_CAR, CC_ONLY_CAR, DBC, CanBus, CarControllerParams, CruiseButtons, EV_CAR
 from system.swaglog import cloudlog
+from selfdrive.car.gm.values import CAMERA_ACC_CAR, CC_ONLY_CAR, DBC, NO_ASCM, CanBus, CarControllerParams, CruiseButtons, EV_CAR
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 NetworkLocation = car.CarParams.NetworkLocation
@@ -51,6 +51,8 @@ class CarController:
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint]['radar'])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint]['chassis'])
+    self.packer_body = CANPacker(DBC[self.CP.carFingerprint]['body'])
+
 
   def update(self, CC, CS):
     actuators = CC.actuators
@@ -97,7 +99,7 @@ class CarController:
           if singlePedalMode:
             # In L Mode, Pedal applies regen at a fixed coast-point (TODO: max regen in L mode may be different per car)
             # This will apply to EVs in L mode.
-            # accel values below zero down to a cutoff point 
+            # accel values below zero down to a cutoff point
             #  that approximates the percentage of braking regen can handle should be scaled between 0 and the coast-point
             # accell values below this point will need to be add-on future hijacked AEB
             # TODO: Determine (or guess) at regen precentage
@@ -107,9 +109,9 @@ class CarController:
             #-1-------AEB------0----regen---0.15-------accel----------+1
             # Shrink gas request to 0.85, have it start at 0.2
             # Shrink brake request to 0.85, first 0.15 gives regen, rest gives AEB
-            
+
             zero = 0.15625 # 40/256
-            
+
             if (actuators.accel > 0.):
               # Scales the accel from 0-1 to 0.156-1
               pedal_gas = clip(((1-zero) * actuators.accel + zero), 0., 1.)
@@ -119,15 +121,15 @@ class CarController:
               # aeb = actuators.brake*(1-zero)-regen # For use later, braking more than regen
           else:
             pedal_gas = clip(actuators.accel, 0., 1.)
-            
-          
+
+
           # apply pedal hysteresis and clip the final output to valid values.
           pedal_final, self.pedal_steady = actuator_hystereses(pedal_gas, self.pedal_steady)
           pedal_gas = clip(pedal_final, 0., 1.)
-          
+
           if not CC.longActive:
             pedal_gas = 0.0 # May not be needed with the enable param
-            
+
           idx = (self.frame // 4) % 4
           can_sends.append(create_gas_interceptor_command(self.packer_pt, pedal_gas, idx))
           # END INTERCEPTOR ############################
@@ -139,14 +141,14 @@ class CarController:
           # 1 mph = 0.44704 m/s
           # 1 m/s = 2.23694 mph
           #speedDiffMS = actuators.speed - CS.out.cruiseState.speed
-          
+
           # TODO: Apparently there are rounding issues.
           speedSetPoint = int(round(CS.out.cruiseState.speed * CV.MS_TO_MPH))
           speedActuator = math.floor(actuators.speed * CV.MS_TO_MPH)
           speedDiff = (speedActuator - speedSetPoint)
-          
+
           cruiseBtn = CruiseButtons.INIT
-          
+
           # We will spam the up/down buttons till we reach the desired speed
           if speedDiff > 0:
             cloudlog.error(f"CC Set Speed: {speedSetPoint}, Actuator Speed: {speedActuator}, Difference: {speedDiff}: Spamming Resume+")
@@ -161,7 +163,7 @@ class CarController:
           if (cruiseBtn != CruiseButtons.INIT) and ((self.frame - self.last_button_frame) * DT_CTRL > 0.63):
             self.last_button_frame = self.frame
             self.apply_speed = speedActuator
-            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, cruiseBtn))          
+            can_sends.append(gmcan.create_buttons(self.packer_pt, CanBus.POWERTRAIN, CS.buttons_counter, cruiseBtn))
           # END CC-ACC #######
         elif self.CP.carFingerprint not in CAMERA_ACC_CAR:
           if self.CP.carFingerprint in EV_CAR:

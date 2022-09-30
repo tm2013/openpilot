@@ -1,3 +1,31 @@
+openpilot - GM Vehicle Extensions
+------
+
+Provides basic support for GM vehicles with LKAS that do not have an ASCM, including (but not limited to):
+* Chevy Bolt EV
+* Chevy Volt
+* Chevy Equinox
+* Cadillac Escalade
+* GMC Acadia & Acadia Denali
+* Chevy Malibu
+* Chevy Tahoe
+* Chevy Silverado
+* Chevy Suburban
+
+WARNING: Comma 2 support has been removed. It was not my decision, and I
+consider it grossly unethical.
+
+~~Restores support for the Grey and White Panda (although you will get bad GPS warnings with a white panda).~~
+
+Port is intended to be upstreamed when complete, thus _should_ work with all vehicles normally supported by openpilot. However, it presently contains firmware for the Pedal Interceptor that is GM-specific.
+
+
+Persistent Branches:
+* dev - Bleeding edge active development. Based on comma.ai's master branch and may be very broken.
+* main - Semi-"stable" development branch, probably aligned with comma.ai release.
+* release - (Not yet available) Packaged release - installs much faster, probably the most stable.
+
+
 ![](https://i.imgur.com/b0ZyIx5.jpg)
 
 Table of Contents

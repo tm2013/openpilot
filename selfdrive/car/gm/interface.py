@@ -62,17 +62,17 @@ class CarInterface(CarInterfaceBase):
       ret.radarOffCan = True  # no radar
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
-      
+
       if candidate in CC_ONLY_CAR:
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
         # TODO: Add Toggle
         ret.openpilotLongitudinalControl = True
-        
+
         ret.enableGasInterceptor = 0x201 in fingerprint[0]
         if ret.enableGasInterceptor:
           ret.openpilotLongitudinalControl = True
           ret.pcmCruise = False
-      
+
     else:  # ASCM, OBD-II harness
       ret.openpilotLongitudinalControl = True
       ret.networkLocation = NetworkLocation.gateway
@@ -125,8 +125,8 @@ class CarInterface(CarInterfaceBase):
         ret.longitudinalActuatorDelayUpperBound = 0.08
         #Note: Low speed, stop and go not tested. Should be fairly smooth on highway
         ret.longitudinalTuning.kpBP = [0., 35.0]
-        ret.longitudinalTuning.kpV = [0.4, 0.06] 
-        ret.longitudinalTuning.kiBP = [0., 35.0] 
+        ret.longitudinalTuning.kpV = [0.4, 0.06]
+        ret.longitudinalTuning.kiBP = [0., 35.0]
         ret.longitudinalTuning.kiV = [0.0, 0.04]
         ret.longitudinalTuning.kf = 0.25
         ret.stoppingDecelRate = 0.8  # reach stopping target smoothly, brake_travel/s while trying to stop

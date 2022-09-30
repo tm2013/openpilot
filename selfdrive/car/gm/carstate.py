@@ -83,7 +83,7 @@ class CarState(CarStateBase):
     if self.CP.enableGasInterceptor: # Flip CC main logic when pedal is being used for long TODO: switch to cancel cc
       ret.cruiseState.available = (not ret.cruiseState.available)
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
-    
+
     if self.CP.carFingerprint in CC_ONLY_CAR:
       # TODO: Seek out CC state (may need to force fault...). CC may be harder to fault...
       ret.accFaulted = False # CC-only cars seem to always have value of AccState.FAULTED (3)
@@ -94,8 +94,8 @@ class CarState(CarStateBase):
       ret.accFaulted = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.FAULTED # Always 3 with CC
       ret.cruiseState.enabled = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] != AccState.OFF
       ret.cruiseState.standstill = pt_cp.vl["AcceleratorPedal2"]["CruiseState"] == AccState.STANDSTILL
-      
-    
+
+
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       if self.CP.carFingerprint in CC_ONLY_CAR:
         ret.cruiseState.speed = (pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"]) * CV.KPH_TO_MS
@@ -171,7 +171,7 @@ class CarState(CarStateBase):
     if CP.transmissionType == TransmissionType.direct:
       signals.append(("RegenPaddle", "EBCMRegenPaddle"))
       checks.append(("EBCMRegenPaddle", 50))
-      
+
     if CP.enableGasInterceptor:
       signals.append(("INTERCEPTOR_GAS", "GAS_SENSOR"))
       signals.append(("INTERCEPTOR_GAS2", "GAS_SENSOR"))
