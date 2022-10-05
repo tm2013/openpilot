@@ -92,6 +92,7 @@ class CarController:
           self.apply_brake = 0
         # BEGIN INTERCEPTOR ############################
         if self.CP.carFingerprint in CC_ONLY_CAR and CS.CP.enableGasInterceptor:
+          print('DEBUG: Using interceptor long')
           # #TODO: Add alert when not in L mode re: limited braking
           singlePedalMode = CS.out.gearShifter == GearShifter.low and self.CP.transmissionType == TransmissionType.automatic
           # TODO: JJS Detect saturated battery?
@@ -205,6 +206,7 @@ class CarController:
         can_sends += gmcan.create_adas_keepalive(CanBus.POWERTRAIN)
 
     else:
+      print('DEBUG: Using stock long')
       # Stock longitudinal, integrated at camera
       if (self.frame - self.last_button_frame) * DT_CTRL > 0.04:
         if CC.cruiseControl.cancel:

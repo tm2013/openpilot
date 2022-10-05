@@ -115,7 +115,13 @@ class CarInterface(CarInterfaceBase):
     # supports stop and go, but initial engage must (conservatively) be above 18mph
     ret.minEnableSpeed = 18 * CV.MPH_TO_MS
     if ret.enableGasInterceptor:
-          ret.minEnableSpeed = -1
+      ret.minEnableSpeed = -1
+      print('DEBUG: Interceptor detected')
+    else:
+      print('DEBUG: No interceptor detected')
+
+    if candidate != CAR.VOLT_NR:
+      print(f'DEBUG: Car is {candidate}')
 
     if candidate == CAR.VOLT or candidate == CAR.VOLT_NR:
       ret.mass = 1607. + STD_CARGO_KG

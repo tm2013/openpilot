@@ -1,15 +1,17 @@
 [submodule "panda"]
-  path = panda
-  url = ../../commaai/panda.git
+	path = panda
+	url = ../../opgm/panda.git
+	branch = feature/cc-pedal
 [submodule "opendbc"]
-  path = opendbc
-  url = ../../commaai/opendbc.git
+	path = opendbc
+	url = ../../commaai/opendbc.git
 [submodule "laika_repo"]
   path = laika_repo
   url = ../../commaai/laika.git
 [submodule "cereal"]
-  path = cereal
-  url = ../../commaai/cereal.git
+	path = cereal
+	url = ../../nworb-cire/cereal.git
+	branch = master
 [submodule "rednose_repo"]
   path = rednose_repo
   url = ../../commaai/rednose.git

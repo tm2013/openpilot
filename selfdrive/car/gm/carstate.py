@@ -85,6 +85,7 @@ class CarState(CarStateBase):
     ret.espDisabled = pt_cp.vl["ESPStatus"]["TractionControlOn"] != 1
 
     if self.CP.carFingerprint in CC_ONLY_CAR:
+      print('DEBUG: CC only car detected')
       # TODO: Seek out CC state (may need to force fault...). CC may be harder to fault...
       ret.accFaulted = False # CC-only cars seem to always have value of AccState.FAULTED (3)
       ret.cruiseState.enabled = pt_cp.vl["ECMEngineStatus"]["CruiseActive"] == 1
