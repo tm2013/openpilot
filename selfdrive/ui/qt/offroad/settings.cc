@@ -54,6 +54,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_monitoring.png",
     },
     {
+      "DisablePowerDown",
+      tr("Disable Power-off"),
+      tr("Enable this toggle to prevent power-down (use while debugging"),
+      "../assets/offroad/icon_warning.png",
+    },
+    {
       "DisengageOnAccelerator",
       tr("Disengage On Accelerator Pedal"),
       tr("When enabled, pressing the accelerator pedal will disengage openpilot."),
