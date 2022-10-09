@@ -21,6 +21,8 @@ class CarController:
     self.frame = 0
     self.last_button_frame = 0
 
+    self.active_aeb_frame_count = 0
+
     self.lka_steering_cmd_counter_last = -1
     self.lka_icon_status_last = (False, False)
 
@@ -40,6 +42,25 @@ class CarController:
 
     # Send CAN commands.
     can_sends = []
+    
+    aeb_active = False
+
+    if CS.drive_mode_button_pressed:
+      aeb_active = True
+
+    # AEB message every 30ms
+    if (self.frame % self.params.AEB_STEP) == 0:
+      if (aeb_active):
+        self.active_aeb_frame_count += 1
+      else:
+        self.active_aeb_frame_count = 0
+
+      # if CS.out.stockAeb:
+      # TODO: need to passthrough stock values...
+
+      can_sends.append(gmcan.create_aeb_command(self.packer_pt, CanBus.POWERTRAIN, aeb_active, self.active_aeb_frame_count, 
+        self.params.AEB_PHASE_LENGTH, self.params.AEB_PHASE_VALUE_1, self.params.AEB_PHASE_VALUE_2))
+
 
     # Steering (50Hz)
     # Avoid GM EPS faults when transmitting messages too close together: skip this transmit if we just received the
