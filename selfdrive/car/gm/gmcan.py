@@ -65,6 +65,45 @@ def create_friction_brake_command(packer, bus, apply_brake, idx, near_stop, at_f
 
   return packer.make_can_msg("EBCMFrictionBrakeCmd", bus, values)
 
+
+def create_aeb_command(packer, bus, aeb_active, active_count, AEB_PHASE_LENGTH, AEB_PHASE_VALUE_1, AEB_PHASE_VALUE_2):
+  #Get phase based on message count
+
+  phase = 0
+  val1 = 0
+  val2 = 0
+  idx = active_count % 4
+
+  if aeb_active:
+    phase = 0
+    if active_count <= AEB_PHASE_LENGTH[0]:
+      phase = 1
+    elif active_count <= AEB_PHASE_LENGTH[1]:
+      phase = 2
+    else:
+      phase = 3
+    val1 = AEB_PHASE_VALUE_1[phase - 1]
+    val2 = AEB_PHASE_VALUE_2[phase - 1]
+
+  return _create_aeb_command_internal(packer, bus, val1, val2, idx, aeb_active)
+
+
+
+def _create_aeb_command_internal(packer, bus, aeb_cmd, aeb_cmd2, idx, aeb_active):
+  values = {
+    "AEBCmdActive": aeb_active,
+    "RollingCounter": idx,
+    "AEBCmd": aeb_cmd,
+    "AEBCmd2": aeb_cmd2,
+  }
+
+  dat = packer.make_can_msg("AEBCmd", bus, values)[2]
+  values["AEBChecksum"] = (((0x0f - (dat[0] & 0x0f)) & 0x0f) << 16) | \
+                          (((0xff - dat[1]) & 0xff) << 8) | \
+                          (((0x100 - dat[2] - ((dat[0] >> 4) & 0x03)) & 0xff))
+
+  return packer.make_can_msg("AEBCmd", bus, values)
+
 def create_acc_dashboard_command(packer, bus, acc_engaged, target_speed_kph, lead_car_in_sight, fcw):
   target_speed = min(target_speed_kph, 255)
 

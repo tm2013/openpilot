@@ -17,6 +17,7 @@ class CarState(CarStateBase):
     self.shifter_values = can_define.dv["ECMPRDNL2"]["PRNDL2"]
     self.lka_steering_cmd_counter = 0
     self.buttons_counter = 0
+    self.drive_mode_button_pressed = False
 
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
@@ -24,6 +25,7 @@ class CarState(CarStateBase):
     self.prev_cruise_buttons = self.cruise_buttons
     self.cruise_buttons = pt_cp.vl["ASCMSteeringButton"]["ACCButtons"]
     self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
+    self.drive_mode_button_pressed = pt_cp.vl["ASCMSteeringButton"]["DriveModeButton"] != 0
 
     ret.wheelSpeeds = self.get_wheel_speeds(
       pt_cp.vl["EBCMWheelSpdFront"]["FLWheelSpd"],
@@ -97,12 +99,14 @@ class CarState(CarStateBase):
       
     
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
+      ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] == 1
       if self.CP.carFingerprint in CC_ONLY_CAR:
         ret.cruiseState.speed = (pt_cp.vl["ECMCruiseControl"]["CruiseSetSpeed"]) * CV.KPH_TO_MS
       else:
         ret.cruiseState.speed = (cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] / 16) * CV.KPH_TO_MS
 
 
+    # TODO: track aeb status
     return ret
 
   @staticmethod
@@ -112,6 +116,12 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
       signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
       checks.append(("ASCMActiveCruiseControlStatus", 25))
+      signals.append(("AEBCmdActive", "AEBCmd"))
+      signals.append(("RollingCounter", "AEBCmd"))
+      signals.append(("AEBCmd", "AEBCmd"))
+      signals.append(("AEBCmd2", "AEBCmd"))
+      checks.append(("AEBCmd", 10))
+
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA)
 
   @staticmethod
@@ -130,6 +140,7 @@ class CarState(CarStateBase):
       ("CruiseState", "AcceleratorPedal2"),
       ("ACCButtons", "ASCMSteeringButton"),
       ("RollingCounter", "ASCMSteeringButton"),
+      ("DriveModeButton", "ASCMSteeringButton"),
       ("SteeringWheelAngle", "PSCMSteeringAngle"),
       ("SteeringWheelRate", "PSCMSteeringAngle"),
       ("FLWheelSpd", "EBCMWheelSpdFront"),

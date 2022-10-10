@@ -23,6 +23,16 @@ class CarControllerParams:
   ADAS_KEEPALIVE_STEP = 100
   CAMERA_KEEPALIVE_STEP = 100
 
+  AEB_STEP = 3 # Every 30ms
+  # TODO: Collect stock behavior at higher speeds, not coming to complete stop
+  # TODO: Figure out how to hold
+  # TODO: determine if there are more phases
+  # TODO: determine if there are more values
+  # TODO: Try to figure out what each phase does
+  AEB_PHASE_LENGTH = [22, 50, -1] # Number of frames expected per phase, final phase -1
+  AEB_PHASE_VALUE_1 = [128, 427, 672] # Value for main signal for given phase
+  AEB_PHASE_VALUE_2 = [0, 10, 0] # Value for second signal for given phase
+
   # Volt gasbrake lookups
   # TODO: These values should be confirmed on non-Volt vehicles
   MAX_GAS = 3072  # Safety limit, not ACC max. Stock ACC >4096 from standstill.
