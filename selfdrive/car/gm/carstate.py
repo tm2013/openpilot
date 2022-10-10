@@ -15,7 +15,7 @@ class CarState(CarStateBase):
     super().__init__(CP)
     can_define = CANDefine(DBC[CP.carFingerprint]["pt"])
     self.shifter_values = can_define.dv["ECMPRDNL2"]["PRNDL2"]
-    self.lka_steering_cmd_counter = 0
+    #self.lka_steering_cmd_counter = 0
     self.buttons_counter = 0
     self.drive_mode_button_pressed = False
 
@@ -62,7 +62,7 @@ class CarState(CarStateBase):
     ret.steeringTorque = pt_cp.vl["PSCMStatus"]["LKADriverAppldTrq"]
     ret.steeringTorqueEps = pt_cp.vl["PSCMStatus"]["LKATorqueDelivered"]
     ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
-    self.lka_steering_cmd_counter = loopback_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
+    #self.lka_steering_cmd_counter = loopback_cp.vl["ASCMLKASteeringCmd"]["RollingCounter"]
 
     # 0 inactive, 1 active, 2 temporarily limited, 3 failed
     self.lkas_status = pt_cp.vl["PSCMStatus"]["LKATorqueDeliveredStatus"]
@@ -125,6 +125,7 @@ class CarState(CarStateBase):
       checks.append(("AEBCmd", 10))
 
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.CAMERA)
+
 
   @staticmethod
   def get_can_parser(CP):
@@ -194,16 +195,15 @@ class CarState(CarStateBase):
 
   @staticmethod
   def get_loopback_can_parser(CP):
-    passive = CP.safetyConfigs[0].safetyModel == car.CarParams.SafetyModel.noOutput
     signals = [
-      ("RollingCounter", "ASCMLKASteeringCmd"),
+      #("RollingCounter", "ASCMLKASteeringCmd"),
     ]
 
     checks = [
       # TODO: Test this to ensure Dashcam mode works
       # TODO: This check causes false startup errors and console spamming...
-      ("ASCMLKASteeringCmd", 0 if passive else 10), # 10 Hz is the stock inactive rate (every 100ms).
+      #("ASCMLKASteeringCmd", 0 if passive else 10), # 10 Hz is the stock inactive rate (every 100ms).
       #                             While active 50 Hz (every 20 ms) is normal
       #                             EPS will tolerate around 200ms when active before faulting
     ]
-    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK, passive)
+    return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, CanBus.LOOPBACK)
