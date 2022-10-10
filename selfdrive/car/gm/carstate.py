@@ -113,9 +113,11 @@ class CarState(CarStateBase):
   def get_cam_can_parser(CP):
     signals = []
     checks = []
-    if CP.networkLocation == NetworkLocation.fwdCamera and CP.carFingerprint not in CC_ONLY_CAR:
-      signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
-      checks.append(("ASCMActiveCruiseControlStatus", 25))
+    if CP.networkLocation == NetworkLocation.fwdCamera:
+      if CP.carFingerprint not in CC_ONLY_CAR:
+        signals.append(("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"))
+        checks.append(("ASCMActiveCruiseControlStatus", 25))
+      
       signals.append(("AEBCmdActive", "AEBCmd"))
       signals.append(("RollingCounter", "AEBCmd"))
       signals.append(("AEBCmd", "AEBCmd"))
