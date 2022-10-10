@@ -66,13 +66,12 @@ def create_friction_brake_command(packer, bus, apply_brake, idx, near_stop, at_f
   return packer.make_can_msg("EBCMFrictionBrakeCmd", bus, values)
 
 
-def create_aeb_command(packer, bus, aeb_active, active_count, AEB_PHASE_LENGTH, AEB_PHASE_VALUE_1, AEB_PHASE_VALUE_2):
+def create_aeb_command(packer, bus, aeb_active, idx, active_count, AEB_PHASE_LENGTH, AEB_PHASE_VALUE_1, AEB_PHASE_VALUE_2):
   #Get phase based on message count
 
   phase = 0
   val1 = 0
   val2 = 0
-  idx = active_count % 4
 
   if aeb_active:
     phase = 0

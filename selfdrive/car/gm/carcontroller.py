@@ -42,7 +42,8 @@ class CarController:
     self.apply_speed = 0
     self.frame = 0
     self.last_button_frame = 0
-
+    self.last_lka_rc = 0
+    self.last_aeb_rc = 0
     self.active_aeb_frame_count = 0
 
     #self.lka_steering_cmd_counter_last = -1
@@ -79,8 +80,10 @@ class CarController:
 
       # if CS.out.stockAeb:
       # TODO: need to passthrough stock values...
-
-      can_sends.append(gmcan.create_aeb_command(self.packer_pt, CanBus.POWERTRAIN, aeb_active, self.active_aeb_frame_count, 
+      idx = (self.last_aeb_rc + 1) % 4
+      self.last_aeb_rc = idx
+      
+      can_sends.append(gmcan.create_aeb_command(self.packer_pt, CanBus.POWERTRAIN, aeb_active, idx, self.active_aeb_frame_count, 
         self.params.AEB_PHASE_LENGTH, self.params.AEB_PHASE_VALUE_1, self.params.AEB_PHASE_VALUE_2))
 
 
@@ -100,7 +103,8 @@ class CarController:
       # GM EPS faults on any gap in received message counters. To handle transient OP/Panda safety sync issues at the
       # moment of disengaging, increment the counter based on the last message known to pass Panda safety checks.
       # idx = (CS.lka_steering_cmd_counter + 1) % 4
-      idx = (self.frame / self.params.STEER_STEP) % 4
+      idx = (self.last_lka_rc + 1) % 4
+      self.last_lka_rc = idx
 
       can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
