@@ -62,6 +62,7 @@ class CarInterface(CarInterfaceBase):
       ret.radarOffCan = True  # no radar
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
+      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_OP_AEB
       
       if candidate in CC_ONLY_CAR:
         ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
