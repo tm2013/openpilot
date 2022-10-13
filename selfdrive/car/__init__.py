@@ -167,6 +167,8 @@ def create_gas_interceptor_command2(packer, enable: bool, gas_amount: float, idx
     "COUNTER_PEDAL": idx & 0xF,
   }
 
+  print(f'DEBUG: Creating gas interceptor command: \n\tenable:{enable}\n\tamount:{gas_amount}')
+
   if enable:
     values["GAS_COMMAND"] = int(gas_amount * 255.)
     values["GAS_COMMAND2"] = int(gas_amount * 255.)

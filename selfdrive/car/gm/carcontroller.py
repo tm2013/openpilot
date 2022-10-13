@@ -128,6 +128,7 @@ class CarController:
           pedal_gas = clip(pedal_final, 0., 1.)
 
           if not CC.longActive:
+            print('DEBUG: CC long inactive! Setting to 0')
             pedal_gas = 0.0 # May not be needed with the enable param
 
           idx = (self.frame // 4) % 4
