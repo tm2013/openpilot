@@ -69,6 +69,10 @@ class Footnote(Enum):
     'Requires a <a href="https://github.com/commaai/openpilot/wiki/GM#hardware">community built ASCM harness</a>. ' +
     '<b><i>NOTE: disconnecting the ASCM disables Automatic Emergency Braking (AEB).</i></b>',
     Column.MODEL)
+  CC = CarFootnote(
+    'ACC Not Available: Requires a Comma Pedal ' +
+    '<b><i>NOTE: can be operated in Lateral-only without a Pedal.</i></b>',
+    Column.MODEL)
 
 
 @dataclass
@@ -182,5 +186,7 @@ EV_CAR = {CAR.VOLT, CAR.BOLT_EV, CAR.BOLT_EUV}
 
 # We're integrated at the camera with VOACC on these cars (instead of ASCM w/ OBD-II harness)
 CAMERA_ACC_CAR = {CAR.BOLT_EV, CAR.BOLT_EUV, CAR.SILVERADO, CAR.EQUINOX}
+
+CC_ONLY_CAR = {}
 
 STEER_THRESHOLD = 1.0
