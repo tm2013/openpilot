@@ -50,6 +50,8 @@ class CarInterface(CarInterfaceBase):
     ret.carName = "gm"
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.autoResumeSng = False
+    # Enabling OP AEB for all the cars
+    ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_OP_AEB
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct

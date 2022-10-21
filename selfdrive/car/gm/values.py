@@ -23,6 +23,8 @@ class CarControllerParams:
   ADAS_KEEPALIVE_STEP = 100
   CAMERA_KEEPALIVE_STEP = 100
 
+  AEB_STEP = 3 # Every 30ms
+
   # Volt gas/brake lookups
   # TODO: These values should be confirmed on non-Volt vehicles.
   # MAX_GAS should achieve 2 m/s^2 and MAX_BRAKE with regen should achieve -4.0 m/s^2
