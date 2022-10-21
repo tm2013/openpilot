@@ -85,7 +85,7 @@ class CarController:
         else:
           self.active_aeb_frame_count = 0
 
-        aeb_idx = (self.frame / self.params.AEB_STEP) % 4
+        aeb_idx = (self.frame // self.params.AEB_STEP) % 4
 
         can_sends.append(gmcan.create_aeb_command(self.packer_pt, CanBus.POWERTRAIN, self.active_aeb_frame_count, aeb_idx, aeb_active))
 
