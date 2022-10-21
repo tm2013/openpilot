@@ -65,10 +65,9 @@ class CarController:
     # Send CAN commands.
     can_sends = []
     
-    aeb_active = False
-
-    if CS.drive_mode_button_pressed:
-      aeb_active = True
+    
+    aeb_active = CS.drive_mode_button_pressed
+      
     #if (self.CP.networkLocation == NetworkLocation.gateway and self.frame % self.params.AEB_STEP) == 0:
     # TODO: In theory, AEB is disabled with ASCM, and we can block it for all other configs
     # AEB message every 30ms
