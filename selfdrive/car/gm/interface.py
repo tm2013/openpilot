@@ -56,6 +56,7 @@ class CarInterface(CarInterfaceBase):
     else:
       ret.transmissionType = TransmissionType.automatic
 
+    ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
     if candidate in CAMERA_ACC_CAR:
       ret.openpilotLongitudinalControl = False
       ret.networkLocation = NetworkLocation.fwdCamera
@@ -64,7 +65,6 @@ class CarInterface(CarInterfaceBase):
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
       
       if candidate in CC_ONLY_CAR:
-        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
         # TODO: Add Toggle
         ret.openpilotLongitudinalControl = True
         
@@ -104,6 +104,7 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = 18 * CV.MPH_TO_MS
 
     if candidate == CAR.VOLT:
+      ret.minEnableSpeed = -1
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
       ret.steerRatio = 17.7  # Stock 15.7, LiveParameters
