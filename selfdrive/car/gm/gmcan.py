@@ -37,6 +37,22 @@ def create_steering_control(packer, bus, apply_steer, idx, lkas_active):
   return packer.make_can_msg("ASCMLKASteeringCmd", bus, values)
 
 
+def create_parking_steering_control(packer, bus, apply_steer, idx):
+  if idx == 0:
+    invidx = 0
+  else:
+    invidx = 4-idx
+  values = {
+    "SteeringWheelCmd": apply_steer,
+    "RollingCounter": idx,
+    "SteeringWheelChecksum": 0x10000 - idx - apply_steer,
+    "RollingCounter2": idx,
+    "InvRollingCounter": invidx,
+    "RequestActive": 1,
+  }
+  return packer.make_can_msg("PACMParkAssitCmd", bus, values)
+
+
 def create_adas_keepalive(bus):
   dat = b"\x00\x00\x00\x00\x00\x00\x00"
   return [make_can_msg(0x409, dat, bus), make_can_msg(0x40a, dat, bus)]
