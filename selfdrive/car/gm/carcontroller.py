@@ -74,14 +74,10 @@ class CarController:
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
+      print(apply_steer)
       park_steer_zero = 32768
-      if CS.out.vEgo < self.CP.minSteerSpeed:
-        pa_steer = (apply_steer*30) + park_steer_zero
-        can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, pa_steer, idx))
-        can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, 0, idx, CC.latActive))
-      else:
-        can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, park_steer_zero, idx))
-        can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      pa_steer = (apply_steer*30) + park_steer_zero
+      can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, pa_steer, idx))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
