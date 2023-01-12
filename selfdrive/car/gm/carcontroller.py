@@ -60,7 +60,7 @@ class CarController:
     if CS.loopback_lka_steering_cmd_updated:
       self.lka_steering_cmd_counter += 1
       self.sent_lka_steering_cmd = True
-    elif (self.frame - self.last_steer_frame) >= steer_step:
+    elif (self.frame - self.last_steer_frame) >= 1:
       # Initialize ASCMLKASteeringCmd counter using the camera until we get a msg on the bus
       if init_lka_counter:
         self.lka_steering_cmd_counter = CS.camera_lka_steering_cmd_counter + 1
@@ -74,10 +74,11 @@ class CarController:
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
+      pa_idx = (self.frame % 4)
       pa_steer_factor = 10
-      if CS.vEgo < 10.1 * CV.KPH_TO_MS:
-        can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, apply_steer * pa_steer_factor, idx))
-      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
+        can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, apply_steer * pa_steer_factor, pa_idx, CC.latActive))
+      # can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
