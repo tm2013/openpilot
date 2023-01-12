@@ -1,3 +1,5 @@
+from collections import deque
+
 from cereal import car
 from common.conversions import Conversions as CV
 from common.numpy_fast import interp
@@ -65,10 +67,15 @@ class CarController:
       apply_steer = 0
 
     pa_steer_factor = 30
+    lag = 4
+    pscm_steer_q = deque(maxlen=lag)
     if self.pa_frames_active > 15:  # continue to forward PSCM for a few frames
       pa_steer = apply_steer * pa_steer_factor
+    elif len(pscm_steer_q) == lag:  # we observe 4 frame lag b/w PSCM and PACM steer
+      pa_steer = pscm_steer_q.popleft() * 16
     else:
       pa_steer = CS.out.steeringAngleDeg * 16
+    pscm_steer_q.append(CS.out.steeringAngleDeg)
 
     pa_idx = (self.frame + 3) % 4
     if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
