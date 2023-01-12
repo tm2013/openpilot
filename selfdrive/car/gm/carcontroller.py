@@ -95,11 +95,12 @@ class CarController:
       # Initialize ASCMLKASteeringCmd counter using the camera until we get a msg on the bus
       if init_lka_counter:
         self.lka_steering_cmd_counter = CS.camera_lka_steering_cmd_counter + 1
+      apply_steer = 0
 
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
-      # can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
+      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, False))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
