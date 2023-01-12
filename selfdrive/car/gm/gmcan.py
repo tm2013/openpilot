@@ -39,7 +39,7 @@ def create_steering_control(packer, bus, apply_steer, idx, lkas_active):
 
 def create_parking_steering_control(packer, bus, apply_steer, idx, frames_active):
   active = bool(frames_active)
-  rising_edge = int(active and frames_active < 6)
+  rising_edge = int(active and frames_active < 7)
   if active:
     idx2 = int(idx > 0) if apply_steer == 0 else 1
   else:

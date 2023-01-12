@@ -58,13 +58,16 @@ class CarController:
       steer_step = self.params.STEER_STEP
 
     # Park assist steering
-    pa_steer_factor = 30
     if CC.latActive:
       new_steer = int(round(actuators.steer * self.params.STEER_MAX))
       apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
-      pa_steer = 45 * 16  # for testing
     else:
       apply_steer = 0
+
+    pa_steer_factor = 30
+    if self.pa_frames_active > 15:  # continue to forward PSCM for a few frames
+      pa_steer = apply_steer * pa_steer_factor
+    else:
       pa_steer = CS.out.steeringAngleDeg * 16
 
     pa_idx = (self.frame + 3) % 4
