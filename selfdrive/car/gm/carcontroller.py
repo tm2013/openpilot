@@ -30,7 +30,8 @@ class CarController:
     self.lka_steering_cmd_counter = 0
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
-    self.pa_active_prev = False
+    self.pa_frames_active = 0
+    
 
     self.params = CarControllerParams(self.CP)
 
@@ -69,11 +70,11 @@ class CarController:
         pa_steer = apply_steer * pa_steer_factor
       else:
         pa_steer = CS.out.steeringAngleDeg * 16
-      pa_active = (CC.latActive and self.pa_active_prev) or (CC.latActive and pa_idx == 3)
-      self.pa_active_prev = pa_active
+      pa_active = (CC.latActive and self.pa_frames_active) or (CC.latActive and pa_idx == 3)
+      self.pa_frames_active = self.pa_frames_active + 1 if pa_active else 0
       can_sends.append(
         gmcan.create_parking_steering_control(
-          self.packer_ch, CanBus.CHASSIS, pa_steer, pa_idx, pa_active
+          self.packer_ch, CanBus.CHASSIS, pa_steer, pa_idx, self.pa_frames_active
         ))
 
     # Avoid GM EPS faults when transmitting messages too close together: skip this transmit if we just received the
