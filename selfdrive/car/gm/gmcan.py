@@ -43,9 +43,10 @@ def create_parking_steering_control(packer, bus, apply_steer, idx, active):
   else:
     invidx = 4-idx
   if active and apply_steer == 0:
-    idx2 = idx % 2
+    zero1 = int(idx > 0)
+    zero2 = int(idx == 0)
   else:
-    idx2 = 1
+    zero1 = zero2 = 1
   values = {
     "SteeringWheelCmd": apply_steer,
     "RollingCounter": idx,
@@ -53,8 +54,8 @@ def create_parking_steering_control(packer, bus, apply_steer, idx, active):
     "RollingCounter2": idx,
     "InvRollingCounter": invidx,
     "RequestActive": int(active),
-    "Zero_If_Centered_1": idx2,
-    "Zero_If_Centered_2": idx2,
+    "Zero_If_Centered_1": zero1,
+    "Zero_If_Centered_2": zero2
   }
   return packer.make_can_msg("PACMParkAssitCmd", bus, values)
 
