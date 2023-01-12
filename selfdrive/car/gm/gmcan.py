@@ -46,7 +46,8 @@ def create_parking_steering_control(packer, bus, apply_steer, idx, active):
     zero1 = int(idx > 0)
     zero2 = int(idx == 0)
   else:
-    zero1 = zero2 = 1
+    zero1 = 1
+    zero2 = 0
   values = {
     "SteeringWheelCmd": apply_steer,
     "RollingCounter": idx,
