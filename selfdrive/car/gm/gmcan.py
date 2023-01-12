@@ -39,33 +39,21 @@ def create_steering_control(packer, bus, apply_steer, idx, lkas_active):
 
 def create_parking_steering_control(packer, bus, apply_steer, idx, frames_active):
   active = bool(frames_active)
-  if idx == 0 or frames_active == 1:
-    invidx = 0
-  elif frames_active == 7:
-    # When park assist commands become active, the
-    # inverse rolling counter jumps ahead for 7 frames,
-    # then goes back to normal.
-    invidx = 3
-  else:
-    invidx = 4-idx
+  rising_edge = int(active and frames_active < 6)
   if active:
-    if apply_steer == 0:
-      zero1 = int(idx > 0)
-      zero2 = int(idx == 0)
-    else:
-      zero1 = 1
-      zero2 = 0
+    idx2 = int(idx > 0) if apply_steer == 0 else 1
   else:
-    zero1 = zero2 = 1
+    idx2 = 1
   values = {
     "SteeringWheelCmd": apply_steer,
     "RollingCounter": idx,
     "SteeringWheelChecksum": (0x10000 - idx - apply_steer) & 0xffff,
     "RollingCounter2": idx,
-    "InvRollingCounter": invidx,
+    "InvRollingCounter": (-rising_edge -idx) % 4,
     "RequestActive": int(active),
-    "Zero_If_Centered_1": zero1,
-    "Zero_If_Centered_2": zero2
+    "Zero_If_Centered_1": idx2,
+    "Zero_If_Centered_2": (1-idx2) if active else idx2,
+    "RequestActiveRisingEdge": rising_edge
   }
   return packer.make_can_msg("PACMParkAssitCmd", bus, values)
 
