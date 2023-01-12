@@ -31,7 +31,7 @@ class CarController:
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
     self.pa_frames_active = 0
-    
+
 
     self.params = CarControllerParams(self.CP)
 
@@ -57,25 +57,24 @@ class CarController:
     if CC.latActive or init_lka_counter:
       steer_step = self.params.STEER_STEP
 
+    # Park assist steering
+    pa_steer_factor = 30
     if CC.latActive:
       new_steer = int(round(actuators.steer * self.params.STEER_MAX))
       apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
+      pa_steer = 45 * 16  # for testing
     else:
       apply_steer = 0
+      pa_steer = CS.out.steeringAngleDeg * 16
 
+    pa_idx = (self.frame + 3) % 4
     if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
-      pa_idx = (self.frame + 3) % 4
-      pa_steer_factor = 30
-      if CC.latActive:
-        pa_steer = apply_steer * pa_steer_factor
-      else:
-        pa_steer = CS.out.steeringAngleDeg * 16
-      pa_active = (CC.latActive and self.pa_frames_active) or (CC.latActive and pa_idx == 3)
+      pa_active = CC.latActive and (self.pa_frames_active or pa_idx == 3)
       self.pa_frames_active = self.pa_frames_active + 1 if pa_active else 0
-      can_sends.append(
-        gmcan.create_parking_steering_control(
-          self.packer_ch, CanBus.CHASSIS, pa_steer, pa_idx, self.pa_frames_active
-        ))
+    can_sends.append(
+      gmcan.create_parking_steering_control(
+        self.packer_ch, CanBus.CHASSIS, int(pa_steer), pa_idx, self.pa_frames_active
+      ))
 
     # Avoid GM EPS faults when transmitting messages too close together: skip this transmit if we just received the
     # next Panda loopback confirmation in the current CS frame.
