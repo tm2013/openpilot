@@ -30,6 +30,7 @@ class CarController:
     self.lka_steering_cmd_counter = 0
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
+    self.pa_active_prev = False
 
     self.params = CarControllerParams(self.CP)
 
@@ -55,33 +56,39 @@ class CarController:
     if CC.latActive or init_lka_counter:
       steer_step = self.params.STEER_STEP
 
+    if CC.latActive:
+      new_steer = int(round(actuators.steer * self.params.STEER_MAX))
+      apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
+    else:
+      apply_steer = 0
+
+    if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
+      pa_idx = (self.frame + 3) % 4
+      pa_steer_factor = 30
+      if CC.latActive:
+        pa_steer = apply_steer * pa_steer_factor
+      else:
+        pa_steer = CS.out.steeringAngleDeg * 16
+      pa_active = (CC.latActive and self.pa_active_prev) or (CC.latActive and pa_idx == 3)
+      self.pa_active_prev = pa_active
+      can_sends.append(
+        gmcan.create_parking_steering_control(
+          self.packer_ch, CanBus.CHASSIS, pa_steer, pa_idx, pa_active
+        ))
+
     # Avoid GM EPS faults when transmitting messages too close together: skip this transmit if we just received the
     # next Panda loopback confirmation in the current CS frame.
     if CS.loopback_lka_steering_cmd_updated:
       self.lka_steering_cmd_counter += 1
       self.sent_lka_steering_cmd = True
-    elif (self.frame - self.last_steer_frame) >= 1:
+    elif (self.frame - self.last_steer_frame) >= steer_step:
       # Initialize ASCMLKASteeringCmd counter using the camera until we get a msg on the bus
       if init_lka_counter:
         self.lka_steering_cmd_counter = CS.camera_lka_steering_cmd_counter + 1
 
-      if CC.latActive:
-        new_steer = int(round(actuators.steer * self.params.STEER_MAX))
-        apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
-      else:
-        apply_steer = 0
-
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
-      if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
-        pa_idx = self.frame % 4
-        pa_steer_factor = 30
-        if CC.latActive:
-          pa_steer = apply_steer * pa_steer_factor
-        else:
-          pa_steer = CS.out.steeringAngleDeg * 16
-        can_sends.append(gmcan.create_parking_steering_control(self.packer_ch, CanBus.CHASSIS, pa_steer, pa_idx, CC.latActive))
       # can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
