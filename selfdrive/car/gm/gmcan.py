@@ -37,9 +37,15 @@ def create_steering_control(packer, bus, apply_steer, idx, lkas_active):
   return packer.make_can_msg("ASCMLKASteeringCmd", bus, values)
 
 
-def create_parking_steering_control(packer, bus, apply_steer, idx, active):
-  if idx == 0:
+def create_parking_steering_control(packer, bus, apply_steer, idx, frames_active):
+  active = bool(frames_active)
+  if idx == 0 or frames_active == 1:
     invidx = 0
+  elif frames_active == 7:
+    # When park assist commands become active, the
+    # inverse rolling counter jumps ahead for 7 frames,
+    # then goes back to normal.
+    invidx = 3
   else:
     invidx = 4-idx
   if active:
