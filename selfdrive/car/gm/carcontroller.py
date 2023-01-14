@@ -77,7 +77,7 @@ class CarController:
       pa_steer = CS.out.steeringAngleDeg * 16
     pscm_steer_q.append(CS.out.steeringAngleDeg)
 
-    pa_idx = (self.frame + 3) % 4
+    pa_idx = self.frame % 4
     if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
       pa_active = CC.latActive and (self.pa_frames_active or pa_idx == 3)
       self.pa_frames_active = self.pa_frames_active + 1 if pa_active else 0
@@ -95,12 +95,11 @@ class CarController:
       # Initialize ASCMLKASteeringCmd counter using the camera until we get a msg on the bus
       if init_lka_counter:
         self.lka_steering_cmd_counter = CS.camera_lka_steering_cmd_counter + 1
-      apply_steer = 0
 
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer
       idx = self.lka_steering_cmd_counter % 4
-      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, False))
+      can_sends.append(gmcan.create_steering_control(self.packer_pt, CanBus.POWERTRAIN, apply_steer, idx, CC.latActive))
 
     if self.CP.openpilotLongitudinalControl:
       # Gas/regen, brakes, and UI commands - all at 25Hz
