@@ -4,6 +4,7 @@ from math import fabs
 from panda import Panda
 
 from common.conversions import Conversions as CV
+from common.realtime import sec_since_boot
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config
 from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
@@ -110,6 +111,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
+    ret.minSteerSpeed = 0.
 
     if candidate == CAR.VOLT:
       ret.mass = 1607. + STD_CARGO_KG
@@ -205,6 +207,8 @@ class CarInterface(CarInterfaceBase):
   def _update(self, c):
     ret = self.CS.update(self.cp, self.cp_cam, self.cp_loopback)
 
+    t = sec_since_boot()
+
     if self.CS.cruise_buttons != self.CS.prev_cruise_buttons and self.CS.prev_cruise_buttons != CruiseButtons.INIT:
       buttonEvents = [create_button_event(self.CS.cruise_buttons, self.CS.prev_cruise_buttons, BUTTONS_DICT, CruiseButtons.UNPRESS)]
       # Handle ACCButtons changing buttons mid-press
@@ -232,9 +236,27 @@ class CarInterface(CarInterfaceBase):
     if ret.vEgo < self.CP.minSteerSpeed:
       events.add(EventName.belowSteerSpeed)
 
+    if self.CS.autoHoldActivated:
+      self.CS.lastAutoHoldTime = t
+    if EventName.accFaulted in events.events and \
+        (t - self.CS.sessionInitTime < 10.0 or
+        t - self.CS.lastAutoHoldTime < 1.0):
+      events.events.remove(EventName.accFaulted)
+
     ret.events = events.to_msg()
 
     return ret
 
   def apply(self, c):
-    return self.CC.update(c, self.CS)
+    can_sends = self.CC.update(c, self.CS)
+    # Release Auto Hold and creep smoothly when regenpaddle pressed
+    if self.CS.regenPaddlePressed and self.CS.autoHold:
+      self.CS.autoHoldActive = False
+
+    if self.CS.autoHold and not self.CS.autoHoldActive and not self.CS.regenPaddlePressed:
+      if self.CS.out.vEgo > 0.03:
+        self.CS.autoHoldActive = True
+      elif self.CS.out.vEgo < 0.02 and self.CS.out.brakePressed:
+        self.CS.autoHoldActive = True
+
+    return can_sends

@@ -37,6 +37,27 @@ def create_steering_control(packer, bus, apply_steer, idx, lkas_active):
   return packer.make_can_msg("ASCMLKASteeringCmd", bus, values)
 
 
+def create_parking_steering_control(packer, bus, apply_steer, idx, frames_active):
+  active = bool(frames_active)
+  rising_edge = int(active and frames_active < 7)
+  if active:
+    idx2 = int(idx > 0) if apply_steer == 0 else 1
+  else:
+    idx2 = 1
+  values = {
+    "SteeringWheelCmd": apply_steer,
+    "RollingCounter": idx,
+    "SteeringWheelChecksum": (0x10000 - idx - apply_steer) & 0xffff,
+    "RollingCounter2": idx,
+    "InvRollingCounter": (-rising_edge -idx) % 4,
+    "RequestActive": int(active),
+    "Zero_If_Centered_1": idx2,
+    "Zero_If_Centered_2": (1-idx2) if active else idx2,
+    "RequestActiveRisingEdge": rising_edge
+  }
+  return packer.make_can_msg("PACMParkAssitCmd", bus, values)
+
+
 def create_adas_keepalive(bus):
   dat = b"\x00\x00\x00\x00\x00\x00\x00"
   return [make_can_msg(0x409, dat, bus), make_can_msg(0x40a, dat, bus)]
@@ -71,8 +92,12 @@ def create_friction_brake_command(packer, bus, apply_brake, idx, enabled, near_s
 
   if apply_brake > 0:
     mode = 0xa
-    if at_full_stop:
-      mode = 0xd
+
+  if near_stop:
+    mode = 0xb
+
+  if at_full_stop:
+    mode = 0xd
 
     # TODO: this is to have GM bringing the car to complete stop,
     # but currently it conflicts with OP controls, so turned off. Not set by all cars
