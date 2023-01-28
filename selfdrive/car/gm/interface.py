@@ -5,7 +5,7 @@ from panda import Panda
 
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config
-from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
+from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CC_ONLY_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
 
 ButtonType = car.CarState.ButtonEvent.Type
@@ -50,9 +50,6 @@ class CarInterface(CarInterfaceBase):
     ret.autoResumeSng = False
 
     ret.enableGasInterceptor = 0x201 in fingerprint[0]
-    if ret.enableGasInterceptor:
-      ret.openpilotLongitudinalControl = True
-      ret.pcmCruise = False
 
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
@@ -65,8 +62,9 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kpBP = [5., 35.]
     ret.longitudinalTuning.kiBP = [0.]
 
-    if candidate in CAMERA_ACC_CAR:
-      ret.experimentalLongitudinalAvailable = True
+    cam_harness = candidate in CAMERA_ACC_CAR  # TODO: detect this
+    if cam_harness:
+      ret.experimentalLongitudinalAvailable = not ret.enableGasInterceptor
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.radarOffCan = True  # no radar
       ret.pcmCruise = True
@@ -200,9 +198,9 @@ class CarInterface(CarInterfaceBase):
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
     if ret.enableGasInterceptor:
-      ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
       ret.minEnableSpeed = -1
       ret.pcmCruise = False
+      ret.openpilotLongitudinalControl = True
       # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
       ret.longitudinalTuning.kpV = [0.4, 0.06]
       ret.longitudinalTuning.kiBP = [0., 35.0]
@@ -253,7 +251,7 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.resumeRequired)
     if ret.vEgo < self.CP.minSteerSpeed:
       events.add(EventName.belowSteerSpeed)
-    if self.CP.enableGasInterceptor and ret.gearShifter not in (GearShifter.park, GearShifter.low):
+    if self.CP.enableGasInterceptor and ret.gearShifter not in (GearShifter.park, GearShifter.low, GearShifter.brake):
       events.add(EventName.brakeUnavailable)
 
     ret.events = events.to_msg()

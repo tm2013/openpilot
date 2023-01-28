@@ -7,7 +7,7 @@ from common.realtime import DT_CTRL
 from opendbc.can.packer import CANPacker
 from selfdrive.car import apply_std_steer_torque_limits, create_gas_interceptor_command
 from selfdrive.car.gm import gmcan
-from selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons
+from selfdrive.car.gm.values import DBC, CanBus, CarControllerParams, CruiseButtons, CC_ONLY_CAR
 
 VisualAlert = car.CarControl.HUDControl.VisualAlert
 NetworkLocation = car.CarParams.NetworkLocation
@@ -71,7 +71,7 @@ class CarController:
 
     # Steering (Active: 50Hz, inactive: 10Hz)
     # Attempt to sync with camera on startup at 50Hz, first few msgs are blocked
-    init_lka_counter = not self.sent_lka_steering_cmd and self.CP.networkLocation == NetworkLocation.fwdCamera
+    init_lka_counter = not self.sent_lka_steering_cmd and self.CP.networkLocation == NetworkLocation.fwdCamera and self.CP.carFingerprint not in CC_ONLY_CAR
     steer_step = self.params.INACTIVE_STEER_STEP
     if CC.latActive or init_lka_counter:
       steer_step = self.params.STEER_STEP
