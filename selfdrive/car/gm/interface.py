@@ -5,7 +5,7 @@ from panda import Panda
 
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config
-from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
+from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CC_ONLY_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
 
 ButtonType = car.CarState.ButtonEvent.Type
@@ -67,6 +67,16 @@ class CarInterface(CarInterfaceBase):
       ret.pcmCruise = True
       ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM
       ret.minEnableSpeed = 5 * CV.KPH_TO_MS
+
+      if candidate in CC_ONLY_CAR:
+        ret.safetyConfigs[0].safetyParam |= Panda.FLAG_GM_HW_CAM_CC
+        # TODO: Add Toggle
+        ret.openpilotLongitudinalControl = True
+
+        ret.enableGasInterceptor = 0x201 in fingerprint[0]
+        if ret.enableGasInterceptor:
+          ret.openpilotLongitudinalControl = True
+          ret.pcmCruise = False
 
       # Tuning for experimental long
       ret.longitudinalTuning.kpV = [2.0, 1.5]
