@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from cereal import car
-from math import fabs
+from math import fabs, atan
 from panda import Panda
 
 from common.conversions import Conversions as CV
@@ -31,9 +31,13 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_steer_feedforward_acadia(desired_angle, v_ego):
-    desired_angle *= 0.09760208
-    sigmoid = desired_angle / (1 + fabs(desired_angle))
-    return 0.04689655 * sigmoid * (v_ego + 10.028217)
+    ANGLE_COEF, ANGLE_COEF2, ANGLE_COEF3, ANGLE_COEF4 = 5.0, 1.92485619, 0.05042997, 0.27338908
+    SPEED_OFFSET, SIGMOID_COEF_RIGHT, SIGMOID_COEF_LEFT = 12.46988687, 0.001, 0.00106132
+    x = ANGLE_COEF * (desired_angle) / max(0.01,v_ego)
+    sigmoid_term = x / (1. + fabs(x)) * (0.01 + v_ego + SPEED_OFFSET) ** ANGLE_COEF2 \
+                   * (SIGMOID_COEF_RIGHT if desired_angle > 0. else SIGMOID_COEF_LEFT)
+    angle_term = ANGLE_COEF3 * (desired_angle * ANGLE_COEF4 - atan(desired_angle * ANGLE_COEF4))
+    return sigmoid_term + angle_term
 
   def get_steer_feedforward_function(self):
     if self.CP.carFingerprint == CAR.VOLT:
@@ -142,10 +146,16 @@ class CarInterface(CarInterfaceBase):
       ret.minEnableSpeed = -1.  # engage speed is decided by pcm
       ret.mass = 4353. * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 2.86
-      ret.steerRatio = 14.4  # end to end is 13.46
+      ret.steerRatio = 16.0  # end to end is 13.46
       ret.centerToFront = ret.wheelbase * 0.4
       ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_acadia()
       ret.longitudinalActuatorDelayUpperBound = 0.5  # large delay to initially start braking
+      ret.steerActuatorDelay = 0.24
+
+      ret.lateralTuning.pid.kpBP = [0., 35.]
+      ret.lateralTuning.pid.kpV = [0., 0.2]
+      ret.lateralTuning.pid.kiBP = [0., 35.]
+      ret.lateralTuning.pid.kiV = [0.012, 0.018]
 
     elif candidate == CAR.BUICK_REGAL:
       ret.mass = 3779. * CV.LB_TO_KG + STD_CARGO_KG  # (3849+3708)/2
