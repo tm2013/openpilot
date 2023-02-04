@@ -1,3 +1,5 @@
+from collections import deque
+
 from cereal import car
 from common.conversions import Conversions as CV
 from common.numpy_fast import interp
@@ -30,6 +32,8 @@ class CarController:
     self.lka_steering_cmd_counter = 0
     self.sent_lka_steering_cmd = False
     self.lka_icon_status_last = (False, False)
+    self.pa_frames_active = 0
+
 
     self.params = CarControllerParams(self.CP)
 
@@ -60,6 +64,33 @@ class CarController:
     if CC.latActive or sync_steer:
       steer_step = self.params.STEER_STEP
 
+    # Park assist steering
+    if CC.latActive:
+      new_steer = int(round(actuators.steer * self.params.STEER_MAX))
+      apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
+    else:
+      apply_steer = 0
+
+    pa_steer_factor = 30
+    lag = 4
+    pscm_steer_q = deque(maxlen=lag)
+    if self.pa_frames_active > 15:  # continue to forward PSCM for a few frames
+      pa_steer = apply_steer * pa_steer_factor
+    elif len(pscm_steer_q) == lag:  # we observe 4 frame lag b/w PSCM and PACM steer
+      pa_steer = pscm_steer_q.popleft() * 16
+    else:
+      pa_steer = CS.out.steeringAngleDeg * 16
+    pscm_steer_q.append(CS.out.steeringAngleDeg)
+
+    pa_idx = self.frame % 4
+    if CS.out.vEgo < 10.1 * CV.KPH_TO_MS:
+      pa_active = CC.latActive and (self.pa_frames_active or pa_idx == 3)
+      self.pa_frames_active = self.pa_frames_active + 1 if pa_active else 0
+    can_sends.append(
+      gmcan.create_parking_steering_control(
+        self.packer_ch, CanBus.CHASSIS, int(pa_steer), pa_idx, self.pa_frames_active
+      ))
+
     # Avoid GM EPS faults when transmitting messages too close together: skip this transmit if we just received the
     # next Panda loopback confirmation in the current CS frame.
     if CS.loopback_lka_steering_cmd_updated:
@@ -69,12 +100,6 @@ class CarController:
       # Initialize ASCMLKASteeringCmd counter using the camera until we get a msg on the bus
       if init_lka_counter:
         self.lka_steering_cmd_counter = CS.pt_lka_steering_cmd_counter + 1
-
-      if CC.latActive:
-        new_steer = int(round(actuators.steer * self.params.STEER_MAX))
-        apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.params)
-      else:
-        apply_steer = 0
 
       self.last_steer_frame = self.frame
       self.apply_steer_last = apply_steer

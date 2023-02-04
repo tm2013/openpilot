@@ -110,6 +110,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
+    ret.minSteerSpeed = 0.
 
     if candidate == CAR.VOLT:
       ret.mass = 1607. + STD_CARGO_KG
