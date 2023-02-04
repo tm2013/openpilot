@@ -21,6 +21,9 @@ class CarState(CarStateBase):
     self.pt_lka_steering_cmd_counter = 0
     self.camera_lka_steering_cmd_counter = 0
     self.buttons_counter = 0
+    self.drive_mode_button_pressed = False
+    self.stock_aeb = 0
+    self.stock_aeb2 = 0
 
   def update(self, pt_cp, cam_cp, loopback_cp):
     ret = car.CarState.new_message()
@@ -30,6 +33,7 @@ class CarState(CarStateBase):
     self.buttons_counter = pt_cp.vl["ASCMSteeringButton"]["RollingCounter"]
     self.pscm_status = copy.copy(pt_cp.vl["PSCMStatus"])
     self.moving_backward = pt_cp.vl["EBCMWheelSpdRear"]["MovingBackward"] != 0
+    self.drive_mode_button_pressed = pt_cp.vl["ASCMSteeringButton"]["DriveModeButton"] != 0
 
     # Variables used for avoiding LKAS faults
     self.loopback_lka_steering_cmd_updated = len(loopback_cp.vl_all["ASCMLKASteeringCmd"]["RollingCounter"]) > 0
@@ -102,10 +106,15 @@ class CarState(CarStateBase):
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       ret.cruiseState.speed = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCSpeedSetpoint"] * CV.KPH_TO_MS
       ret.stockAeb = cam_cp.vl["AEBCmd"]["AEBCmdActive"] != 0
+      self.stock_aeb_rolling_counter = cam_cp.vl["AEBCmd"]["RollingCounter"]
+      self.stock_aeb = cam_cp.vl["AEBCmd"]["AEBCmd"]
+      self.stock_aeb2 = cam_cp.vl["AEBCmd"]["AEBCmd2"]
+      ret.stockFcw = cam_cp.vl["ASCMActiveCruiseControlStatus"]["FCWAlert"] != 0
       # openpilot controls nonAdaptive when not pcmCruise
       if self.CP.pcmCruise:
         ret.cruiseState.nonAdaptive = cam_cp.vl["ASCMActiveCruiseControlStatus"]["ACCCruiseState"] not in (2, 3)
 
+    # TODO: track aeb status
     return ret
 
   @staticmethod
@@ -115,7 +124,11 @@ class CarState(CarStateBase):
     if CP.networkLocation == NetworkLocation.fwdCamera:
       signals += [
         ("AEBCmdActive", "AEBCmd"),
+        ("AEBCmd", "AEBCmd"),
+        ("AEBCmd2", "AEBCmd"),
+        ("RollingCounter", "AEBCmd"),
         ("RollingCounter", "ASCMLKASteeringCmd"),
+        ("FCWAlert", "ASCMActiveCruiseControlStatus"),
         ("ACCSpeedSetpoint", "ASCMActiveCruiseControlStatus"),
         ("ACCCruiseState", "ASCMActiveCruiseControlStatus"),
       ]
@@ -143,6 +156,7 @@ class CarState(CarStateBase):
       ("CruiseState", "AcceleratorPedal2"),
       ("ACCButtons", "ASCMSteeringButton"),
       ("RollingCounter", "ASCMSteeringButton"),
+      ("DriveModeButton", "ASCMSteeringButton"),
       ("SteeringWheelAngle", "PSCMSteeringAngle"),
       ("SteeringWheelRate", "PSCMSteeringAngle"),
       ("FLWheelSpd", "EBCMWheelSpdFront"),
