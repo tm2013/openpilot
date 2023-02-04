@@ -5,7 +5,7 @@ from panda import Panda
 
 from common.conversions import Conversions as CV
 from selfdrive.car import STD_CARGO_KG, create_button_event, scale_tire_stiffness, get_safety_config
-from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR
+from selfdrive.car.gm.values import CAR, CruiseButtons, CarControllerParams, EV_CAR, CAMERA_ACC_CAR, CC_ONLY_CAR
 from selfdrive.car.interfaces import CarInterfaceBase
 
 ButtonType = car.CarState.ButtonEvent.Type
@@ -49,6 +49,8 @@ class CarInterface(CarInterfaceBase):
     ret.safetyConfigs = [get_safety_config(car.CarParams.SafetyModel.gm)]
     ret.autoResumeSng = False
 
+    ret.enableGasInterceptor = 0x201 in fingerprint[0]
+
     if candidate in EV_CAR:
       ret.transmissionType = TransmissionType.direct
     else:
@@ -60,8 +62,9 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kpBP = [5., 35.]
     ret.longitudinalTuning.kiBP = [0.]
 
-    if candidate in CAMERA_ACC_CAR:
-      ret.experimentalLongitudinalAvailable = True
+    cam_harness = candidate in CAMERA_ACC_CAR  # TODO: detect this
+    if cam_harness:
+      ret.experimentalLongitudinalAvailable = not ret.enableGasInterceptor
       ret.networkLocation = NetworkLocation.fwdCamera
       ret.radarUnavailable = True  # no radar
       ret.pcmCruise = True
@@ -111,7 +114,7 @@ class CarInterface(CarInterfaceBase):
     ret.steerLimitTimer = 0.4
     ret.radarTimeStep = 0.0667  # GM radar runs at 15Hz instead of standard 20Hz
 
-    if candidate == CAR.VOLT:
+    if candidate in (CAR.VOLT, CAR.VOLT_NR):
       ret.mass = 1607. + STD_CARGO_KG
       ret.wheelbase = 2.69
       ret.steerRatio = 17.7  # Stock 15.7, LiveParameters
@@ -125,7 +128,7 @@ class CarInterface(CarInterfaceBase):
       ret.lateralTuning.pid.kf = 1.  # get_steer_feedforward_volt()
       ret.steerActuatorDelay = 0.2
 
-    elif candidate == CAR.MALIBU:
+    elif candidate in (CAR.MALIBU, CAR.MALIBU_NR):
       ret.mass = 1496. + STD_CARGO_KG
       ret.wheelbase = 2.83
       ret.steerRatio = 15.8
@@ -138,7 +141,7 @@ class CarInterface(CarInterfaceBase):
       ret.centerToFront = ret.wheelbase * 0.4
       ret.steerRatio = 15.7
 
-    elif candidate == CAR.ACADIA:
+    elif candidate in (CAR.ACADIA, CAR.ACADIA_NR):
       ret.minEnableSpeed = -1.  # engage speed is decided by pcm
       ret.mass = 4353. * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 2.86
@@ -179,6 +182,49 @@ class CarInterface(CarInterfaceBase):
       ret.steerActuatorDelay = 0.2
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
+    elif candidate == CAR.BOLT_NR:
+      ret.minEnableSpeed = -1
+      ret.minSteerSpeed = 5 * CV.MPH_TO_MS
+      ret.mass = 1616. + STD_CARGO_KG
+      ret.wheelbase = 2.60096
+      ret.steerRatio = 16.8
+      ret.steerRatioRear = 0.
+      ret.centerToFront = 2.0828  # ret.wheelbase * 0.4 # wild guess
+      tire_stiffness_factor = 1.0
+      # TODO: Improve stability in turns
+      # still working on improving lateral
+
+      # TODO: Should ActuatorDelay be converted to BPV arrays?
+      # TODO: Check if the actuator delay changes based on vehicle speed
+      ret.steerActuatorDelay = 0.
+      ret.lateralTuning.pid.kpBP, ret.lateralTuning.pid.kiBP = [[10., 41.0], [10., 41.0]]
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.18, 0.275], [0.01, 0.021]]
+      ret.lateralTuning.pid.kf = 0.0002
+
+    elif candidate == CAR.TAHOE_NR:
+      ret.minEnableSpeed = -1.  # engage speed is decided by pcmFalse
+      ret.minSteerSpeed = -1 * CV.MPH_TO_MS
+      ret.mass = 5602. * CV.LB_TO_KG + STD_CARGO_KG  # (3849+3708)/2
+      ret.wheelbase = 2.95  # 116 inches in meters
+      ret.steerRatio = 16.3  # guess for tourx
+      ret.steerRatioRear = 0.  # unknown online
+      ret.centerToFront = 2.59  # ret.wheelbase * 0.4 # wild guess
+      ret.steerActuatorDelay = 0.2
+      ret.pcmCruise = True  # TODO: see if this resolves cruiseMismatch
+      ret.openpilotLongitudinalControl = False  # ASCM vehicles use OP for long
+      ret.radarOffCan = True  # ASCM vehicles (typically) have radar
+
+      # According to JYoung, decrease MAX_LAT_ACCEL if it is understeering
+      # friction may need to be increased slowly as well
+      # I'm not sure what to do about centering / wandering
+      MAX_LAT_ACCEL = 2.5
+      ret.lateralTuning.init('torque')
+      ret.lateralTuning.torque.useSteeringAngle = True
+      ret.lateralTuning.torque.kp = 2.0 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.kf = 1.0 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.ki = 0.50 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.friction = 0.1
+
     elif candidate == CAR.SILVERADO:
       ret.mass = 2200. + STD_CARGO_KG
       ret.wheelbase = 3.75
@@ -187,12 +233,52 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 1.0
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
 
-    elif candidate == CAR.EQUINOX:
+    elif candidate == CAR.SUBURBAN:
+      ret.minEnableSpeed = -1.  # engage speed is decided by pcmFalse
+      ret.minSteerSpeed = -1 * CV.MPH_TO_MS
+      ret.mass = 2731. + STD_CARGO_KG
+      ret.wheelbase = 3.302
+      ret.steerRatio = 17.3  # COPIED FROM SILVERADO
+      ret.centerToFront = ret.wheelbase * 0.49
+      ret.steerActuatorDelay = 0.075
+      ret.pcmCruise = True  # TODO: see if this resolves cruiseMismatch
+      ret.openpilotLongitudinalControl = False  # ASCM vehicles use OP for long
+      ret.radarOffCan = True  # ASCM vehicles (typically) have radar
+
+      # According to JYoung, decrease MAX_LAT_ACCEL if it is understeering
+      # friction may need to be increased slowly as well
+      # I'm not sure what to do about centering / wandering
+      MAX_LAT_ACCEL = 2.0
+      ret.lateralTuning.init('torque')
+      ret.lateralTuning.torque.useSteeringAngle = True
+      ret.lateralTuning.torque.kp = 2.0 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.kf = 1.0 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.ki = 0.50 / MAX_LAT_ACCEL
+      ret.lateralTuning.torque.friction = 0.12
+
+    elif candidate in (CAR.EQUINOX, CAR.EQUINOX_NR):
       ret.mass = 3500. * CV.LB_TO_KG + STD_CARGO_KG
       ret.wheelbase = 2.72
       ret.steerRatio = 14.4
       ret.centerToFront = ret.wheelbase * 0.4
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning)
+
+    if ret.enableGasInterceptor:
+      ret.minEnableSpeed = -1
+      ret.pcmCruise = False
+      ret.openpilotLongitudinalControl = True
+      # Note: Low speed, stop and go not tested. Should be fairly smooth on highway
+      ret.longitudinalTuning.kpV = [0.4, 0.06]
+      ret.longitudinalTuning.kiBP = [0., 35.0]
+      ret.longitudinalTuning.kiV = [0.0, 0.04]
+      ret.longitudinalTuning.kiV = [0.0, 0.04]
+      ret.longitudinalTuning.kf = 0.3
+      ret.stoppingDecelRate = 0.8  # reach stopping target smoothly, brake_travel/s while trying to stop
+      ret.stopAccel = 0.  # Required acceleration to keep vehicle stationary
+      ret.vEgoStopping = 0.5  # Speed at which the car goes into stopping state, when car starts requesting stopping accel
+      ret.vEgoStarting = 0.5  # Speed at which the car goes into starting state, when car starts requesting starting accel,
+      # vEgoStarting needs to be > or == vEgoStopping to avoid state transition oscillation
+      ret.stoppingControl = True
 
     # TODO: start from empirically derived lateral slip stiffness for the civic and scale by
     # mass and CG position, so all cars will have approximately similar dyn behaviors
@@ -231,6 +317,8 @@ class CarInterface(CarInterfaceBase):
       events.add(EventName.resumeRequired)
     if ret.vEgo < self.CP.minSteerSpeed:
       events.add(EventName.belowSteerSpeed)
+    if self.CP.enableGasInterceptor and ret.gearShifter not in (GearShifter.park, GearShifter.low, GearShifter.brake):
+      events.add(EventName.brakeUnavailable)
 
     ret.events = events.to_msg()
 
